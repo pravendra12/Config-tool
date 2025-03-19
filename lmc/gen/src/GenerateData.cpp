@@ -671,7 +671,7 @@ B2OrderingInfo GenerateData::generateB2Structure(vector<double> elementCompositi
   auto cfg = config_;
   cfg.UpdateNeighborList(cutoffs_);
 
-  double totalComposition;
+  double totalComposition = 0;
   for (auto composition : elementComposition)
   {
     totalComposition += composition;
