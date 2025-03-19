@@ -1,0 +1,7 @@
+simulation_method Ansys
+log_type kinetic_mc
+#log_type canonical_mc
+config_type config
+cutoffs 3.20, 4.6, 5.4
+initial_steps 0
+increment_steps 10000
