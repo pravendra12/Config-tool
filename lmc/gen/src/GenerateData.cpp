@@ -434,12 +434,16 @@ pair<VectorXd, VectorXd> GenerateData::getMigratingAtomNeighborPairEncodeVector(
     const set<Element> &elementSet)
 {
   // Need to work on this
-  size_t vacancyMigrationBO = 2;
+  size_t vacancyMigrationBO = 3;
 
   unordered_map<string, RowVectorXd> oneHotEncodingHashMap = GetOneHotEncodeHashmap(elementSet);
 
-  vector<vector<size_t>> equivalentSitesEncoding = GetEquivalentSites3Fold(config_,
-                                                                           vacancyMigrationBO);
+  // vector<vector<size_t>> equivalentSitesEncoding = GetEquivalentSites3Fold(config_,
+  //                                                                         vacancyMigrationBO);
+
+  vector<vector<size_t>> equivalentSitesEncoding = GetEquivalentSitesUnderKFoldRotation(config_, 
+                                                                                        vacancyMigrationBO, 
+                                                                                        6);
 
   // Forward Jump
   vector<size_t> forwardSymmSortedVector = GetSortedLatticeVectorStateOfPair(config_,
@@ -465,6 +469,7 @@ pair<VectorXd, VectorXd> GenerateData::getMigratingAtomNeighborPairEncodeVector(
 
   return {forwardEncodeVector, backwardEncodeVector};
 }
+
 
 // Helper function to write a list of elements as a comma-separated string
 void GenerateData::writeNeighbourVectorToFile(ofstream &outFile,

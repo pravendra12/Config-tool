@@ -1,16 +1,5 @@
 #include "PrintUtility.h"
 
-void print1DVector(const std::vector<double> &vec) 
-{
-  std::cout << "{";
-  for (size_t i = 0; i < vec.size(); ++i) {
-      std::cout << vec[i];
-      if (i < vec.size() - 1) {
-          std::cout << ", ";
-      }
-  }
-  std::cout << ", }" << std::endl;  // Extra comma before closing brace
-};
 
 void print2DVector(const std::vector<std::vector<size_t>> &vec) 
 {

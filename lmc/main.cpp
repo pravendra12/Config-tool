@@ -15,6 +15,7 @@
 #include <SymmetryCustom.h>
 #include "PrintUtility.h"
 #include "GenerateData.h"
+#include "SymmetryCorrect.h"
 using namespace std;
 
 
@@ -26,6 +27,149 @@ int main(int argc, char *argv[]) {
   api::Parameter parameter(argc, argv);
   api::Print(parameter);
   api::Run(parameter);
+}
+
+
+/*
+int main()
+{
+  size_t supercellSize = 10;
+  double latticeParam = 3.4;
+  string structureType = "BCC";
+  vector<string> elementVector = {"Ta", "W"};
+  vector<double> compositionVector = {50, 50};
+  const vector<double> cutoffs = {3.3, 4.7, 5.6};
+
+  auto cfg = Config::GenerateAlloySupercell(supercellSize,
+                                            latticeParam,
+                                            structureType,
+                                            elementVector,
+                                            compositionVector,
+                                            1);
+
+  cfg.UpdateNeighborList(cutoffs);
+
+  auto encodingVectorBO2 = GetEquivalentSites3Fold(cfg, 2);
+
+  print2DVector(encodingVectorBO2);
+
+  auto encodingVectorBO3 = GetEquivalentSites3Fold(cfg, 3);
+
+  print2DVector(encodingVectorBO3);
+
+  auto centralAtomId = cfg.GetCentralAtomLatticeId();
+  auto neighbourAtomId = cfg.GetNeighborLatticeIdVectorOfLattice(centralAtomId, 1)[0];
+
+  Element vacancy("X");
+  cfg.SetElementOfLattice(centralAtomId, vacancy);
+  cfg.SetElementOfLattice(neighbourAtomId, vacancy);
+
+  pair<size_t, size_t> latticeIdPair = {centralAtomId, neighbourAtomId};
+
+  auto ssVectorIV = GetSortedLatticeVectorStateOfPair(cfg, latticeIdPair, 3);
+
+  // second nn of the jump pair
+  Element fourthNNElement("V");
+  for (auto id : ssVectorIV)
+  {
+    cfg.SetElementOfLattice(id, fourthNNElement);
+  }
+
+  auto ssVectorIII = GetSortedLatticeVectorStateOfPair(cfg, latticeIdPair, 3);
+
+  // second nn of the jump pair
+  Element thirdNNElement("Mg");
+  for (auto id : ssVectorIII)
+  {
+    cfg.SetElementOfLattice(id, thirdNNElement);
+  }
+
+  auto ssVectorII = GetSortedLatticeVectorStateOfPair(cfg, latticeIdPair, 2);
+
+  // second nn of the jump pair
+  Element secondNNElement("Al");
+  for (auto id : ssVectorII)
+  {
+
+    cfg.SetElementOfLattice(id, secondNNElement);
+  }
+
+  auto ssVectorI = GetSortedLatticeVectorStateOfPair(cfg, latticeIdPair, 1);
+
+  // first nn of the jump pair
+  Element firstNNElement("W");
+  for (auto id : ssVectorI)
+  {
+    cfg.SetElementOfLattice(id, firstNNElement);
+  }
+
+  // Config::WriteConfig("vacancyMigration.cfg", cfg);
+
+  // Config::WriteLAMMPSDataFile("vacancyMigration.data", cfg);
+
+  print1DVector(ssVectorII);
+
+  print1DVector(ssVectorIII);
+
+  cout << cfg.GetBasis() << endl;
+
+  Eigen::Vector3d point{18.7, 11.9, 18.7};
+  Eigen::Vector3d axis{-1, 1, 1};
+  Eigen::Vector3d center{17.85, 16.15, 16.15};
+
+  Eigen::Vector3d point1{18.7, 11.9, 18.7};
+
+  getEquivalentPoints(point, axis, 60, center);
+
+  auto encoding6F = GetEquivalentSitesUnderKFoldRotation(cfg, 3, 6);
+
+  cout << "Size of IV encoding: " << ssVectorIV.size() << endl;
+
+  auto cfgWTa = Config::GenerateAlloySupercell(supercellSize,
+                                               latticeParam,
+                                               structureType,
+                                               elementVector,
+                                               compositionVector,
+                                               1);
+
+  set<Element> elementSet;
+
+  for (auto ele : elementVector)
+  {
+    elementSet.insert(Element(ele));
+  }
+
+  auto oneHotEncodingMap = GetOneHotEncodeHashmap(elementSet);
+
+  auto encodingMigratingAtomPairs = GetEncodingMigratingAtomPair(cfgWTa,
+                                                                 encoding6F,
+                                                                 ssVectorIII,
+                                                                 oneHotEncodingMap,
+                                                                 firstNNElement);
+  
+                                                                 
+  cout << encodingMigratingAtomPairs.transpose() << endl;
+}
+
+/*
+int main()
+{
+  size_t supercellSize = 30;
+  double latticeParam = 3.4;
+  string structureType = "BCC";
+  vector<string> elementVector = {"W", "Ta"};
+  vector<double> compositionVector = {50, 50};
+
+  auto cfg = Config::GenerateAlloySupercell(supercellSize,
+                                            latticeParam,
+                                            structureType,
+                                            elementVector,
+                                            compositionVector,
+                                            1);
+  Element vacancy("X");
+  cfg.SetElementOfLattice(0, vacancy);
+
+  Config::WriteConfig("start_W50Ta50_30x30x30.cfg", cfg);
 }
 
 /*

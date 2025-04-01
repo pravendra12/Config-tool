@@ -7,7 +7,19 @@
 #include <unordered_map>
 #include "eigen3/Eigen/Dense"
 
-void print1DVector(const std::vector<double> &vec);
+template <typename T>
+void print1DVector(const T &vec) 
+{
+  std::cout << "{";
+  for (size_t i = 0; i < vec.size(); ++i) {
+      std::cout << vec[i];
+      if (i < vec.size() - 1) {
+          std::cout << ", ";
+      }
+  }
+  std::cout << ", }" << std::endl;  // Extra comma before closing brace
+};
+
 void print2DVector(const std::vector<std::vector<size_t>> &vec);
 
 void print2DStringVector(const std::vector<std::vector<std::string>> &vec);

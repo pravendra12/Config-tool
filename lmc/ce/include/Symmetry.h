@@ -30,7 +30,7 @@ class Symmetry
   
 };
 
-std::unordered_map<std::string, Eigen::RowVectorXd>  GetOneHotEncodeHashmap(const std::set<Element> &elementSet);
+// std::unordered_map<std::string, Eigen::RowVectorXd>  GetOneHotEncodeHashmap(const std::set<Element> &elementSet);
 
 std::vector<double> GetEncodeVector3F(const Config &config, 
                                       std::pair<size_t, size_t> jumpPair, 
