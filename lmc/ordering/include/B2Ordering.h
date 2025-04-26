@@ -186,6 +186,8 @@ struct B2OrderingInfo
   Element element2;
   // Fraction of beta element at alpha site    
   double alphaOccupancyFractionElement2; 
+
+  int numB2Centers;
 };
 
 #endif // LMC_ANSYS_INCLUDE_B2ORDERING_H_

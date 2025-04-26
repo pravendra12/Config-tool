@@ -1422,12 +1422,12 @@ void Config::WriteLAMMPSDataFile(
     const std::string &filename,
     const Config &config_out)
 {
-  
 
   std::ofstream ofs(filename, std::ios::out | std::ios::trunc);
-  if (!ofs.is_open()) {
-      std::cerr << "Error opening file: " << filename << std::endl;
-      return;
+  if (!ofs.is_open())
+  {
+    std::cerr << "Error opening file: " << filename << std::endl;
+    return;
   }
 
   // Header section
@@ -1698,3 +1698,38 @@ void Config::WriteLattice(const std::string &filename, size_t &max_bond_order) c
 //     ofs << std::endl;
 //   }
 // }
+
+Config Config::CreateVacancy(size_t latticeId,
+                             Element &element) const
+{
+  auto numAtoms = GetNumAtoms();
+  Eigen::Matrix3Xd newRelativePositionMatrix(3, numAtoms - 1);
+
+  // corresponding atom Id for given lattice Id
+  size_t atomId = lattice_to_atom_hashmap_.at(latticeId);
+
+  auto newAtomVector = atom_vector_;
+
+  element = newAtomVector[atomId];
+
+  // Remove the element from the atom vector
+  newAtomVector.erase(newAtomVector.begin() + atomId);
+
+  // Copy before
+  if (latticeId > 0)
+  {
+    newRelativePositionMatrix.block(0, 0, 3, latticeId) =
+        relative_position_matrix_.block(0, 0, 3, latticeId);
+  }
+
+  // Copy after
+  if (latticeId < numAtoms - 1)
+  {
+    newRelativePositionMatrix.block(0, latticeId, 3, numAtoms - latticeId - 1) =
+        relative_position_matrix_.block(0, latticeId + 1, 3, numAtoms - latticeId - 1);
+  }
+
+  return Config(basis_,
+                newRelativePositionMatrix,
+                newAtomVector);
+}

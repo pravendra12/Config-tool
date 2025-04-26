@@ -24,7 +24,6 @@ namespace fs = std::filesystem;
 class GenerateData
 {
 public:
-
   GenerateData(
       const Config config,
       const size_t supercellSize,
@@ -85,6 +84,10 @@ public:
                                      const Element elementAtAlphaSite,
                                      const Element elementAtBetaSite);
 
+  B2OrderingInfo AddB2Structure(size_t numB2Center, 
+                                vector<Element> &elementSet);
+
+
 private:
   void writeNeighbourVectorToFile(ofstream &outputFile,
                                   const vector<size_t> &vec) const;
@@ -118,4 +121,7 @@ private:
   mutable pair<size_t, size_t> backwardJumpPair_{};
 };
 
+
+
 #endif // LMC_GEN_INCLUDE_GENERATEDATA_H_
+

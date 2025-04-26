@@ -294,7 +294,7 @@ namespace api
 
     /// Printing the Clusters
 
-    cout << "Clusters" << endl;
+    cout << "\nClusters" << endl;
 
     Element vacancy("X");
     std::set<Element> elementSet(parameter.element_set_.begin(), parameter.element_set_.end());
@@ -318,6 +318,22 @@ namespace api
     {
       cout << clusterType << endl;
     }
+
+    // Printing the symmetrical equivalent sites which will be used for
+    // barrier prediction under K fold rotation and BO = 3
+
+    size_t kFoldRotation = 6;
+    size_t vacancyMigrationBO = 3;
+
+    vector<vector<size_t>>
+        equivalentSitesEncoding = GetEquivalentSitesUnderKFoldRotation(
+            cfgCE,
+            vacancyMigrationBO,
+            kFoldRotation);
+
+    cout << "\nEquivalent sites under " << kFoldRotation << " rotation: " << endl;
+
+    print2DVector(equivalentSitesEncoding);
 
     // Iterate over the range of unique configuration IDs (1 to 100)
     for (size_t uniqueConfigId = 1; uniqueConfigId <= parameter.num_unique_structure_; ++uniqueConfigId)
@@ -365,9 +381,20 @@ namespace api
       Element elementAtAlphaSite(parameter.element_set_[0]);
       Element elementAtBetaSite(parameter.element_set_[1]);
 
-      auto orderingInfo = dataGenerator.generateB2Structure(parameter.element_composition_,
-                                                            elementAtAlphaSite,
-                                                            elementAtBetaSite);
+      // auto orderingInfo = dataGenerator.generateB2Structure(parameter.element_composition_,
+      //                                                       elementAtAlphaSite,
+      //                                                       elementAtBetaSite);
+
+      int maxNumB2Center = 3;
+      std::random_device rd;
+      std::mt19937 gen(rd());
+      std::uniform_int_distribution<size_t> selectNumB2Center(1, maxNumB2Center);
+
+      size_t numB2Center = selectNumB2Center(gen);
+
+      vector<Element> b2ElementVector = {elementAtAlphaSite, elementAtBetaSite};
+
+      auto orderingInfo = dataGenerator.AddB2Structure(numB2Center, b2ElementVector);
 
       cout << endl;
       cout << "B2 Ordered Structure" << endl;

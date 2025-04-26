@@ -100,7 +100,7 @@ vector<vector<size_t>> GetEquivalentSitesUnderKFoldRotation(const Config &config
 
   // Rotation axis
   const Vector3d rotationAxis = centralLatticePosition - nnLatticePosition;
-  cout << "Transition Position: " << transitionPosition.transpose() << endl;
+  // cout << "Transition Position: " << transitionPosition.transpose() << endl;
 
   // Pre-populate position vector
   vector<Vector3d> cartesianPositionVector;
@@ -120,7 +120,7 @@ vector<vector<size_t>> GetEquivalentSitesUnderKFoldRotation(const Config &config
   for (size_t i = 0; i < cartesianPositionVector.size(); ++i)
   {
     positionToIndex[cartesianPositionVector[i]] = i;
-    cout << cartesianPositionVector[i].transpose() << " : " << i << endl;
+    // cout << cartesianPositionVector[i].transpose() << " : " << i << endl;
   }
 
   double rotationAngle = 360.0 / kFoldRotation; // 120 degrees for 3-fold
@@ -159,7 +159,7 @@ vector<vector<size_t>> GetEquivalentSitesUnderKFoldRotation(const Config &config
     equivalentEncodingPositionVector.push_back(position);
   }
 
-  print2DVector(equivalentEncodingVector);
+  // print2DVector(equivalentEncodingVector);
 
   return equivalentEncodingVector;
 }

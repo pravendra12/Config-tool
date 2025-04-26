@@ -16,6 +16,7 @@
 #include "PrintUtility.h"
 #include "GenerateData.h"
 #include "SymmetryCorrect.h"
+#include <cmath>
 using namespace std;
 
 
@@ -28,7 +29,209 @@ int main(int argc, char *argv[]) {
   api::Print(parameter);
   api::Run(parameter);
 }
+/*
+int main()
+{
 
+  // vector<Element> elementVector{"Al","W"};
+  vector<size_t> ssVector = {5, 7, 10};
+  double latticeParam = 3.243;
+  const vector<double> cutoffs = {3.22, 4.5, 5.3};
+  string structureType = "BCC";
+  vector<string> elementVector = {"Ta", "W"};
+  vector<double> compositionVector = {50, 50};
+  bool isOrdered = true;
+  size_t seed = 34432;
+
+  
+    auto cfg = Config::GenerateAlloySupercell(ssVector[0],
+                                              latticeParam,
+                                              structureType,
+                                              elementVector,
+                                              compositionVector,
+                                              seed);
+
+  cfg.UpdateNeighborList(cutoffs);
+    
+  cout << cfg.GetNeighborLatticeIdVectorOfLattice(0, 1).size() << endl;
+  cout << cfg.GetNeighborLatticeIdVectorOfLattice(0, 2).size() << endl;
+  cout << cfg.GetNeighborLatticeIdVectorOfLattice(0, 3).size() << endl;
+
+
+  /*
+    GenerateData dataGenerator(supercellSize,
+      latticeParam,
+      structureType,
+      elementVector,
+      compositionVector,
+      cutoffs,
+      seed,
+      true);
+
+
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<size_t> selectB2Center(1, 3);
+
+  for (int i = 0; i < 10; i++)
+  {
+    cout << selectB2Center(gen)<< endl;
+  }
+
+  vector<Element>elementSet{Element("Ta"), Element("W")};
+
+
+
+    auto b2Info1 = dataGenerator.AddB2Structure(1, elementSet);
+
+    Config::WriteConfig("b2Type1.cfg", b2Info1.orderedConfig);
+
+    auto b2Info2 = dataGenerator.AddB2Structure(2, elementSet);
+    Config::WriteConfig("b2Type2.cfg", b2Info2.orderedConfig);
+
+
+    auto b2Info3 = dataGenerator.AddB2Structure(3, elementSet);
+    Config::WriteConfig("b2Type3.cfg", b2Info3.orderedConfig);
+
+  */
+
+  // dataGenerator.AddB2Ordering(6,{Element("Ta"), Element("W")} );
+
+
+/*
+int main(int argc, char *argv[]) {
+  if (argc == 1) {
+    cout << "No input parameter filename." << endl;
+    return 1;
+  }
+  api::Parameter parameter(argc, argv);
+  api::Print(parameter);
+  api::Run(parameter);
+}
+
+*/
+////////////// Testing the barrier encoding till 3rd NN ///////////////////////
+/*
+void writeEncodingToFileMain(ofstream &outFile,
+                         const VectorXd &vec)
+{
+  for (size_t i = 0; i < vec.size(); ++i)
+  {
+    if (i == vec.size() - 1)
+    {
+
+      outFile << vec[i];
+    }
+    else
+    {
+      outFile << vec[i] << ", ";
+    }
+  }
+}
+
+int main()
+{
+  const vector<double> cutoffs = {3.3, 4.7, 5.6};
+  size_t vacancyMigrationBO = 3;
+  set<Element> elementSet;
+  elementSet.insert(Element("Ta"));
+  elementSet.insert(Element("W"));
+
+  unordered_map<string, RowVectorXd> oneHotEncodingHashMap = GetOneHotEncodeHashmap(elementSet);
+
+  bool isEquivalentSitesEncodingDeclared = false;
+  vector<vector<size_t>> equivalentSitesEncoding;
+
+  ofstream outFile("outputEncodingWTa_BO_3.txt");
+
+  outFile << "FolderId\t"
+          << "MigratingElement\t"
+          << "VacancyId\t"
+          << "MigratingElementId\t"
+          << "ForwardEncoding\t"
+          << "BackwardEncoding\t" << endl;
+
+  // read the file
+
+  std::string parentDir = "/media/sf_Phd/ActiveLearning/test1/selectedFolder"; // Set your parent directory path
+
+  // Iterate over all directories inside parentDir
+  for (const auto &subdir : fs::directory_iterator(parentDir))
+  {
+    if (fs::is_directory(subdir))
+    {
+      fs::path configDir = subdir.path() / "Config";
+
+      if (fs::exists(configDir) && fs::is_directory(configDir))
+      {
+        for (const auto &entry : fs::directory_iterator(configDir))
+        {
+          if (entry.is_regular_file() && entry.path().extension() == ".cfg")
+          {
+            std::string configPath = entry.path().string();
+            std::cout << "Reading config: " << configPath << std::endl;
+
+            auto cfg = Config::ReadCfg(configPath);
+            cfg.UpdateNeighborList(cutoffs);
+
+            size_t vacancyId = cfg.GetCentralAtomLatticeId();
+            size_t migratingElementLatticeId = cfg.GetNeighborLatticeIdVectorOfLattice(vacancyId, 1)[0];
+
+            auto migratingAtomElement = cfg.GetElementOfLattice(migratingElementLatticeId);
+
+            pair<size_t, size_t> forwardJumpPair = {migratingElementLatticeId, vacancyId};
+            pair<size_t, size_t> backwardJumpPair = {vacancyId, migratingElementLatticeId};
+
+            if (!isEquivalentSitesEncodingDeclared)
+            {
+
+              equivalentSitesEncoding = GetEquivalentSitesUnderKFoldRotation(cfg,
+                                                                             vacancyMigrationBO,
+                                                                             6);
+              isEquivalentSitesEncodingDeclared = true;
+            }
+
+            // Forward Jump
+            vector<size_t> forwardSymmSortedVector = GetSortedLatticeVectorStateOfPair(cfg,
+                                                                                       forwardJumpPair,
+                                                                                       vacancyMigrationBO);
+
+            VectorXd forwardEncodeVector = GetEncodingMigratingAtomPair(cfg,
+                                                                        equivalentSitesEncoding,
+                                                                        forwardSymmSortedVector,
+                                                                        oneHotEncodingHashMap,
+                                                                        migratingAtomElement);
+
+            // Backward Jump
+            vector<size_t> backwardSymmSortedVector = GetSortedLatticeVectorStateOfPair(cfg,
+                                                                                        backwardJumpPair,
+                                                                                        vacancyMigrationBO);
+
+            VectorXd backwardEncodeVector = GetEncodingMigratingAtomPair(cfg,
+                                                                         equivalentSitesEncoding,
+                                                                         backwardSymmSortedVector,
+                                                                         oneHotEncodingHashMap,
+                                                                         migratingAtomElement);
+
+            outFile << subdir.path().filename().string() << "\t";
+
+            outFile << migratingAtomElement.GetElementString() << "\t"
+                    << vacancyId << "\t"
+                    << migratingElementLatticeId << "\t";
+
+            writeEncodingToFileMain(outFile, forwardEncodeVector);
+            outFile << "\t";
+
+            writeEncodingToFileMain(outFile, backwardEncodeVector);
+            outFile << "\t";
+
+            outFile << endl;
+          }
+        }
+      }
+    }
+  }
+}
 
 /*
 int main()
@@ -146,8 +349,8 @@ int main()
                                                                  ssVectorIII,
                                                                  oneHotEncodingMap,
                                                                  firstNNElement);
-  
-                                                                 
+
+
   cout << encodingMigratingAtomPairs.transpose() << endl;
 }
 

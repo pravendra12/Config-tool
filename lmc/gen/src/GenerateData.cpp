@@ -144,9 +144,17 @@ GenerateData::GenerateData(
   migratingAtomElement_ = config_.GetElementOfLattice(migratingElementLatticeId_);
 
   // Need to think about this
-  forwardJumpPair_ = {migratingElementLatticeId_, vacancyId_};
 
-  backwardJumpPair_ = {vacancyId_, migratingElementLatticeId_};
+  // Previous
+  // forwardJumpPair_ = {migratingElementLatticeId_, vacancyId_};
+
+  // backwardJumpPair_ = {vacancyId_, migratingElementLatticeId_};
+
+  // Now
+
+  forwardJumpPair_ = {vacancyId_, migratingElementLatticeId_};
+
+  backwardJumpPair_ = {migratingElementLatticeId_, vacancyId_};
 }
 
 GenerateData::GenerateData(
@@ -182,9 +190,10 @@ GenerateData::GenerateData(
   migratingAtomElement_ = config_.GetElementOfLattice(migratingElementLatticeId_);
 
   // Need to think about this
-  forwardJumpPair_ = {migratingElementLatticeId_, vacancyId_};
 
-  backwardJumpPair_ = {vacancyId_, migratingElementLatticeId_};
+  forwardJumpPair_ = {vacancyId_, migratingElementLatticeId_};
+
+  backwardJumpPair_ = {migratingElementLatticeId_, vacancyId_};
 }
 
 bool GenerateData::saveConfig()
@@ -441,9 +450,10 @@ pair<VectorXd, VectorXd> GenerateData::getMigratingAtomNeighborPairEncodeVector(
   // vector<vector<size_t>> equivalentSitesEncoding = GetEquivalentSites3Fold(config_,
   //                                                                         vacancyMigrationBO);
 
-  vector<vector<size_t>> equivalentSitesEncoding = GetEquivalentSitesUnderKFoldRotation(config_, 
-                                                                                        vacancyMigrationBO, 
-                                                                                        6);
+  size_t kFoldRotation = 6;
+  vector<vector<size_t>> equivalentSitesEncoding = GetEquivalentSitesUnderKFoldRotation(config_,
+                                                                                        vacancyMigrationBO,
+                                                                                        kFoldRotation);
 
   // Forward Jump
   vector<size_t> forwardSymmSortedVector = GetSortedLatticeVectorStateOfPair(config_,
@@ -469,7 +479,6 @@ pair<VectorXd, VectorXd> GenerateData::getMigratingAtomNeighborPairEncodeVector(
 
   return {forwardEncodeVector, backwardEncodeVector};
 }
-
 
 // Helper function to write a list of elements as a comma-separated string
 void GenerateData::writeNeighbourVectorToFile(ofstream &outFile,
@@ -527,7 +536,8 @@ void writeHeaders(ofstream &outFile)
       "Element1",
       "Alpha Site Occupancy Element1",
       "Element2",
-      "Alpha Site Occupancy Element2"};
+      "Alpha Site Occupancy Element2",
+      "numB2Center"};
 
   // Check if file is empty before writing headers
   if (outFile.tellp() == 0)
@@ -644,11 +654,15 @@ void GenerateData::writeVacancyJumpCeConfig(ofstream &outFile,
 
       // beta site fractional occupancy
       outFile << b2OrderInfo.alphaOccupancyFractionElement2 << "\t";
+
+      // number of B2 Centers
+      outFile << b2OrderInfo.numB2Centers << "\t";
     }
 
     else
     {
       // If not ordered, write "N/A" for all fields
+      outFile << "N/A" << "\t";
       outFile << "N/A" << "\t";
       outFile << "N/A" << "\t";
       outFile << "N/A" << "\t";
@@ -719,4 +733,533 @@ B2OrderingInfo GenerateData::generateB2Structure(vector<double> elementCompositi
       b2OrderedStructure.GetAlphaSiteOccupancy(elementAtBetaSite));
 
   return b2OrderInfo;
+}
+/*
+void GenerateData::addB2Ordering(double percentB2)
+{
+  auto atomVector = config_.GetAtomVector();
+
+  set elementSet(atomVector.begin(), atomVector.end());
+
+  if (elementSet.size() == 2)
+  {
+
+    // some lattice Id
+
+    unordered_set<size_t> latticeIdAssigned = {};
+
+    size_t b2CenterLatticeId = 0;
+
+
+    latticeIdAssigned.insert(b2CenterLatticeId);
+
+    auto b2CenterElement = config_.GetElementOfLattice(b2CenterLatticeId);
+
+    Element neighbourElement;
+
+    for (const auto &element : elementSet)
+    {
+      if (element != b2CenterElement)
+      {
+        neighbourElement = element;
+        break; // Only two elements, so we can stop here
+      }
+    }
+
+    // Neighbour
+    auto firstNNB2Center = config_.GetNeighborLatticeIdVectorOfLattice(b2CenterLatticeId, 1);
+    // set all the element of neigbour to the neighbour element and
+    // keep track of the b2CenterElement
+
+    // Stores count of of those element which are changed
+    // to keep the concentration constant
+    int numB2CenterElement = 0;
+
+    for (auto nnId : firstNNB2Center)
+    {
+      if (config_.GetElementOfLattice(nnId) == b2CenterElement)
+      {
+        config_.SetElementOfLattice(nnId, neighbourElement);
+        // these number of b2 center element removed
+        numB2CenterElement += 1;
+      }
+      latticeIdAssigned.insert(nnId);
+    }
+
+    // second nearest nn should be same as the b2 center element
+
+    auto secondNNB2Center = config_.GetNeighborLatticeIdVectorOfLattice(b2CenterLatticeId, 2);
+
+    for (auto nnId : secondNNB2Center)
+    {
+      if (config_.GetElementOfLattice(nnId) != b2CenterElement)
+      {
+        config_.SetElementOfLattice(nnId, b2CenterElement);
+        numB2CenterElement -= 1;
+      }
+      latticeIdAssigned.insert(nnId);
+    }
+
+    // 15 ids are done
+
+    if (numB2CenterElement != 0)
+    {
+      if (numB2CenterElement < 0)
+      {
+        // more number of B2 center element in the config
+        for (size_t id = 0; id < config_.GetNumAtoms(); id++)
+        {
+          if (latticeIdAssigned.find(id) == latticeIdAssigned.end())
+          {
+            // id not part of the B2 structure
+            while (numB2CenterElement)
+            {
+              if (config_.GetElementOfLattice(id) == b2CenterElement)
+              {
+                config_.SetElementOfLattice(id, neighbourElement);
+                numB2CenterElement+=1;
+              }
+            }
+          }
+        }
+      }
+      else
+      {
+        // less number of B2 center element in the config
+        for (size_t id = 0; id < config_.GetNumAtoms(); id++)
+        {
+          if (latticeIdAssigned.find(id) == latticeIdAssigned.end())
+          {
+            // id not part of the B2 structure
+            while (numB2CenterElement)
+            {
+              if (config_.GetElementOfLattice(id) != b2CenterElement)
+              {
+                config_.SetElementOfLattice(id, neighbourb2CenterElementElement);
+                numB2CenterElement-=1;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Change the neighbour to opposite
+  }
+}
+
+B2OrderingInfo GenerateData::AddB2Structure(const int numB2Center,
+                                            vector<Element> elementSet)
+{
+  if (elementSet.size() != 2)
+  {
+    throw std::runtime_error("B2 ordering requires exactly two elements");
+  }
+
+  auto config = config_;
+
+  // Get atom vector and unique elements
+  auto atomVector = config.GetAtomVector();
+
+  // Extract the two elements;
+  Element centerElement = elementSet[0];
+  Element neighborElement = elementSet[1];
+
+  // Calculate number of sites to apply B2 ordering based on percentB2
+  size_t totalSites = config.GetNumAtoms();
+  size_t numB2Sites = numB2Center * 15;
+
+  // Track assigned lattice sites
+  std::unordered_set<size_t> assignedSites;
+
+  // Random number generator for selecting center sites
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<size_t> dist(0, totalSites - 1);
+
+  // Count current elements to maintain concentration
+  size_t centerElementCount = std::count(atomVector.begin(), atomVector.end(), centerElement);
+  size_t neighborElementCount = totalSites - centerElementCount;
+
+  int deltaCenterElement = 0;   // Net change in centerElement count
+  int deltaNeigbourElement = 0; // Net change in neighbour element count
+
+  // Apply B2 ordering to selected sites
+  size_t sitesProcessed = 0;
+  while (sitesProcessed < numB2Sites && assignedSites.size() < totalSites)
+  {
+    // Select a random unassigned lattice site as B2 center
+    size_t centerId;
+    do
+    {
+      centerId = dist(gen);
+    } while (assignedSites.find(centerId) != assignedSites.end());
+
+    assignedSites.insert(centerId);
+
+    // Set center to centerElement
+    if (config.GetElementOfLattice(centerId) != centerElement)
+    {
+      config.SetElementOfLattice(centerId, centerElement);
+      deltaCenterElement++;
+    }
+
+    // Set first nearest neighbors to neighborElement
+    auto firstNN = config.GetNeighborLatticeIdVectorOfLattice(centerId, 1);
+    for (size_t nnId : firstNN)
+    {
+      if (assignedSites.find(nnId) == assignedSites.end())
+      {
+        if (config.GetElementOfLattice(nnId) != neighborElement)
+        {
+          config.SetElementOfLattice(nnId, neighborElement);
+          deltaNeigbourElement++;
+        }
+        assignedSites.insert(nnId);
+      }
+    }
+
+    // Set second nearest neighbors to centerElement
+    auto secondNN = config.GetNeighborLatticeIdVectorOfLattice(centerId, 2);
+    for (size_t nnId : secondNN)
+    {
+      if (assignedSites.find(nnId) == assignedSites.end())
+      {
+        if (config.GetElementOfLattice(nnId) != centerElement)
+        {
+          config.SetElementOfLattice(nnId, centerElement);
+          deltaCenterElement++;
+        }
+        assignedSites.insert(nnId);
+      }
+    }
+
+    sitesProcessed += 1 + firstNN.size() + secondNN.size();
+  }
+
+  // Correct the composition
+
+  centerElementCount -= deltaCenterElement;
+  neighborElementCount -= deltaNeigbourElement;
+
+  int id = 0;
+  while ((centerElementCount != neighborElementCount) &&
+         id < totalSites)
+  {
+    auto currentElement = config.GetElementOfLattice(id);
+
+    if (assignedSites.find(id) == assignedSites.end())
+    {
+      if ((centerElementCount < neighborElementCount) &&
+          currentElement == neighborElement)
+      {
+        config.SetElementOfLattice(id, centerElement);
+        centerElementCount++;
+      }
+      else if ((centerElementCount > neighborElementCount) &&
+               currentElement == centerElement)
+      {
+        config.SetElementOfLattice(id, neighborElement);
+        neighborElementCount++;
+      }
+    }
+    id++;
+  }
+
+  B2Ordering b2OrderedStructure(config);
+
+  return B2OrderingInfo(
+      true,
+      config,
+      centerElement,
+      b2OrderedStructure.GetAlphaSiteOccupancy(centerElement),
+      neighborElement,
+      b2OrderedStructure.GetAlphaSiteOccupancy(neighborElement),
+      numB2Center);
+}
+
+*/
+
+B2OrderingInfo GenerateData::AddB2Structure(size_t numB2Center,
+                                            vector<Element> &elementSet)
+{
+  if (elementSet.size() != 2)
+  {
+    throw std::runtime_error("B2 ordering requires exactly two elements");
+  }
+
+  auto config = config_;
+
+  // Get atom vector and unique elements
+  // auto atomVector = config.GetAtomVector();
+
+  // Extract the two elements;
+  Element alphaElement = elementSet[0];
+  Element betaElement = elementSet[1];
+
+  size_t totalSites = config.GetNumAtoms();
+
+  unordered_set<size_t> allAtomIds;
+
+  // Insert 0 to n-1
+  for (int id = 0; id < totalSites; ++id)
+  {
+    allAtomIds.insert(id);
+  }
+
+  // random number generator which will select where to insert the B2
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<size_t> selectB2Center(0, totalSites - 1);
+
+  int numAlpha = totalSites / 2;
+  int numBeta = totalSites / 2;
+
+  // Simple B2
+  if (numB2Center == 1)
+  {
+    size_t b2CenterAtomId = selectB2Center(gen);
+
+    config.SetElementOfAtom(b2CenterAtomId, alphaElement);
+
+    allAtomIds.erase(b2CenterAtomId);
+    numAlpha -= 1;
+
+    auto firstNN = config.GetNeighborAtomIdVectorOfAtom(b2CenterAtomId, 1);
+
+    for (auto id : firstNN)
+    {
+      config.SetElementOfAtom(id, betaElement);
+      allAtomIds.erase(id);
+      numBeta -= 1;
+    }
+
+    auto secondNN = config.GetNeighborAtomIdVectorOfAtom(b2CenterAtomId, 2);
+
+    for (auto id : secondNN)
+    {
+      config.SetElementOfAtom(id, alphaElement);
+      allAtomIds.erase(id);
+      numAlpha -= 1;
+    }
+  }
+
+  else if (numB2Center == 2)
+  {
+    // Corner shared B2
+
+    // b2 Center 1
+    size_t b2Center1AtomId = selectB2Center(gen);
+
+    config.SetElementOfAtom(b2Center1AtomId, alphaElement);
+
+    allAtomIds.erase(b2Center1AtomId);
+    numAlpha -= 1;
+
+    auto firstNN = config.GetNeighborAtomIdVectorOfAtom(b2Center1AtomId, 1);
+
+    for (auto id : firstNN)
+    {
+      config.SetElementOfAtom(id, betaElement);
+      allAtomIds.erase(id);
+      numBeta -= 1;
+    }
+
+    auto secondNN = config.GetNeighborAtomIdVectorOfAtom(b2Center1AtomId, 2);
+
+    for (auto id : secondNN)
+    {
+      config.SetElementOfAtom(id, alphaElement);
+      allAtomIds.erase(id);
+      numAlpha -= 1;
+    }
+
+    // Second B2 center will be the first nearest neighbour of the the first B2 center
+
+    size_t b2Center2AtomId = firstNN[0];
+
+    config.SetElementOfAtom(b2Center2AtomId, betaElement);
+
+    if (allAtomIds.find(b2Center2AtomId) != allAtomIds.end())
+    {
+      allAtomIds.erase(b2Center2AtomId);
+      numBeta -= 1;
+    }
+
+    firstNN = config.GetNeighborAtomIdVectorOfAtom(b2Center2AtomId, 1);
+
+    for (auto id : firstNN)
+    {
+      if (allAtomIds.find(id) != allAtomIds.end())
+      {
+
+        config.SetElementOfAtom(id, alphaElement);
+        allAtomIds.erase(id);
+        numAlpha -= 1;
+      }
+    }
+
+    secondNN = config.GetNeighborAtomIdVectorOfAtom(b2Center2AtomId, 2);
+
+    for (auto id : secondNN)
+    {
+      if (allAtomIds.find(id) != allAtomIds.end())
+      {
+        config.SetElementOfAtom(id, betaElement);
+        allAtomIds.erase(id);
+        numBeta -= 1;
+      }
+    }
+  }
+
+  else if (numB2Center == 3)
+  {
+    // Corner shared B2
+
+    // b2 Center 1
+    size_t b2Center1AtomId = selectB2Center(gen);
+
+    config.SetElementOfAtom(b2Center1AtomId, alphaElement);
+
+    allAtomIds.erase(b2Center1AtomId);
+    numAlpha -= 1;
+
+    auto firstNN = config.GetNeighborAtomIdVectorOfAtom(b2Center1AtomId, 1);
+
+    for (auto id : firstNN)
+    {
+      config.SetElementOfAtom(id, betaElement);
+      allAtomIds.erase(id);
+      numBeta -= 1;
+    }
+
+    auto secondNN = config.GetNeighborAtomIdVectorOfAtom(b2Center1AtomId, 2);
+
+    for (auto id : secondNN)
+    {
+      config.SetElementOfAtom(id, alphaElement);
+      allAtomIds.erase(id);
+      numAlpha -= 1;
+    }
+
+    // Second B2 center will be the first nearest neighbour of the the first B2 center
+
+    size_t b2Center2AtomId = firstNN[0];
+    size_t b2Center3AtomId = firstNN[2];
+
+    config.SetElementOfAtom(b2Center2AtomId, betaElement);
+
+    if (allAtomIds.find(b2Center2AtomId) != allAtomIds.end())
+    {
+      allAtomIds.erase(b2Center2AtomId);
+      numBeta -= 1;
+    }
+
+    firstNN = config.GetNeighborAtomIdVectorOfAtom(b2Center2AtomId, 1);
+
+    for (auto id : firstNN)
+    {
+      if (allAtomIds.find(id) != allAtomIds.end())
+      {
+
+        config.SetElementOfAtom(id, alphaElement);
+        allAtomIds.erase(id);
+        numAlpha -= 1;
+      }
+    }
+
+    secondNN = config.GetNeighborAtomIdVectorOfAtom(b2Center2AtomId, 2);
+
+    for (auto id : secondNN)
+    {
+      if (allAtomIds.find(id) != allAtomIds.end())
+      {
+        config.SetElementOfAtom(id, betaElement);
+        allAtomIds.erase(id);
+        numBeta -= 1;
+      }
+    }
+
+    // third B2 center
+
+    if (allAtomIds.find(b2Center3AtomId) != allAtomIds.end())
+    {
+      allAtomIds.erase(b2Center3AtomId);
+      numBeta -= 1;
+    }
+
+    firstNN = config.GetNeighborAtomIdVectorOfAtom(b2Center3AtomId, 1);
+
+    for (auto id : firstNN)
+    {
+      if (allAtomIds.find(id) != allAtomIds.end())
+      {
+
+        config.SetElementOfAtom(id, alphaElement);
+        allAtomIds.erase(id);
+        numAlpha -= 1;
+      }
+    }
+
+    secondNN = config.GetNeighborAtomIdVectorOfAtom(b2Center3AtomId, 2);
+
+    for (auto id : secondNN)
+    {
+      if (allAtomIds.find(id) != allAtomIds.end())
+      {
+        config.SetElementOfAtom(id, betaElement);
+        allAtomIds.erase(id);
+        numBeta -= 1;
+      }
+    }
+  }
+
+  // Iterate over the rest of atom Ids
+  // assign remaining alpha and beta randomly
+
+  std::vector<size_t> remainingIds(allAtomIds.begin(), allAtomIds.end());
+
+  // Shuffle the remaining atom IDs randomly
+  std::shuffle(remainingIds.begin(), remainingIds.end(), gen);
+
+  for (auto id : remainingIds)
+  {
+    if (numAlpha > 0 && numBeta > 0)
+    {
+      // Randomly decide between alpha and beta
+      std::uniform_int_distribution<int> dist(0, 1);
+      int choice = dist(gen);
+      if (choice == 0)
+      {
+        config.SetElementOfAtom(id, alphaElement);
+        numAlpha -= 1;
+      }
+      else
+      {
+        config.SetElementOfAtom(id, betaElement);
+        numBeta -= 1;
+      }
+    }
+    else if (numAlpha > 0)
+    {
+      config.SetElementOfAtom(id, alphaElement);
+      numAlpha -= 1;
+    }
+    else if (numBeta > 0)
+    {
+      config.SetElementOfAtom(id, betaElement);
+      numBeta -= 1;
+    }
+  }
+
+  B2Ordering b2OrderedStructure(config);
+
+  return B2OrderingInfo(
+    true,
+    config,
+    alphaElement,
+    b2OrderedStructure.GetAlphaSiteOccupancy(alphaElement),
+    betaElement,
+    b2OrderedStructure.GetAlphaSiteOccupancy(betaElement),
+    numB2Center);
 }
