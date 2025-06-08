@@ -38,10 +38,20 @@ struct Vector3dHash
     }
 };
 
+size_t findClosestMatch(const unordered_map<Vector3d, size_t, Vector3dHash> &positionToIndex, const Vector3d &target, double tolerance);
+
+double toRadians(double degrees);
+
 std::vector<Vector3d> getEquivalentPoints(const Vector3d &start_point,
                                           const Vector3d &axis,
                                           double theta,
-                                          const Vector3d &center);
+                                          const Vector3d &center,
+                                          bool applyInversion);
+
+vector<vector<size_t>> GetEquivalentSitesUnderKBarSymmetry(
+    const Config &config, 
+    size_t maxBondOrder, 
+    size_t kFoldRotation);
 
 std::vector<std::vector<size_t>> GetEquivalentSitesUnderKFoldRotation(const Config &config,
                                                                       size_t maxBondOrder,

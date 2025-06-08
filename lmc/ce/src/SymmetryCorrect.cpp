@@ -55,33 +55,179 @@ Vector3d rotatePoints(const Vector3d &point,
   // Translate back
   return p_rot + center;
 }
+/*
+vector<Vector3d> getEquivalentPoints(const Vector3d &start_point,
+               const Vector3d &axis,
+               double theta,
+               const Vector3d &center)
+{
+int n = 360.0 / theta;
+
+// cout << "number of rotations: " << n << endl;
+
+vector<Vector3d> equivalent_points;
+equivalent_points.reserve(n); // Pre-allocate space
+
+for (int i = 0; i < n; ++i)
+{
+double angle = i * theta;
+Vector3d rotated = rotatePoints(start_point, axis, angle, center);
+equivalent_points.push_back(rotated);
+// cout << rotated.transpose() << endl;
+}
+
+return equivalent_points;
+}
+*/
 
 vector<Vector3d> getEquivalentPoints(const Vector3d &start_point,
-                                          const Vector3d &axis,
-                                          double theta,
-                                          const Vector3d &center)
+                                     const Vector3d &axis,
+                                     double theta,
+                                     const Vector3d &center,
+                                     bool applyInversion)
 {
   int n = 360.0 / theta;
-
-  // cout << "number of rotations: " << n << endl;
-
   vector<Vector3d> equivalent_points;
-  equivalent_points.reserve(n); // Pre-allocate space
+  equivalent_points.reserve(n);
 
   for (int i = 0; i < n; ++i)
   {
     double angle = i * theta;
     Vector3d rotated = rotatePoints(start_point, axis, angle, center);
+
+    if (applyInversion)
+    {
+      rotated = 2.0 * center - rotated; // Inversion through the center
+    }
+
     equivalent_points.push_back(rotated);
-    // cout << rotated.transpose() << endl;
   }
 
   return equivalent_points;
 }
 
+vector<Vector3d> getRotoInvertedPoints(const Vector3d &start_point,
+                                       const Vector3d &axis,
+                                       double theta,
+                                       const Vector3d &center)
+{
+  bool applyInversion = true;
+  auto rotated_points = getEquivalentPoints(start_point, axis, theta, center, applyInversion);
+  vector<Vector3d> rotoinverted_points;
+  rotoinverted_points.reserve(rotated_points.size());
+
+  for (const auto &p : rotated_points)
+  {
+    rotoinverted_points.push_back(2.0 * center - p); // Apply inversion
+  }
+
+  return rotoinverted_points;
+}
+vector<vector<size_t>> GetEquivalentSitesUnderKBarSymmetry(const Config &config,
+                                                           size_t maxBondOrder,
+                                                           size_t kFoldRotation)
+{
+  vector<vector<size_t>> equivalentEncodingVectorKBar;
+
+  // Get lattice pair (central and nearest neighbor)
+  const size_t centralLatticeId = config.GetCentralAtomLatticeId();
+  const auto nnLatticeIdVector = config.GetNeighborLatticeIdVectorOfLattice(centralLatticeId, 1);
+
+  const size_t nnLatticeId = nnLatticeIdVector[0];
+  const pair<size_t, size_t> latticeIdPair = {centralLatticeId, nnLatticeId};
+
+  // Get symmetrically sorted lattice ID vector for the pair
+  const auto ssVector = config.GetSortedLatticeVectorStateOfPair(latticeIdPair, maxBondOrder);
+
+  // Transition position
+  const Vector3d centralLatticePosition = config.GetCartesianPositionOfLattice(centralLatticeId);
+  const Vector3d nnLatticePosition = config.GetCartesianPositionOfLattice(nnLatticeId);
+  const Vector3d transitionPosition = 0.5 * (centralLatticePosition + nnLatticePosition);
+
+  // Rotation axis
+  const Vector3d rotationAxis = centralLatticePosition - nnLatticePosition;
+  // cout << "Transition Position: " << transitionPosition.transpose() << endl;
+
+  // Pre-populate position vector
+  vector<Vector3d> cartesianPositionVector;
+  cartesianPositionVector.reserve(ssVector.size());
+
+  for (const auto &latticeId : ssVector)
+  {
+    cartesianPositionVector.emplace_back(config.GetCartesianPositionOfLattice(latticeId));
+  }
+
+  // Use a hash map for O(1) lookup of positions to indices
+  unordered_map<Vector3d, size_t, Vector3dHash> positionToIndex;
+  for (size_t i = 0; i < cartesianPositionVector.size(); ++i)
+  {
+    positionToIndex[cartesianPositionVector[i]] = i;
+    // cout << cartesianPositionVector[i].transpose() << " : " << i << endl;
+  }
+
+  auto equivalentEncodingVectorKFold = GetEquivalentSitesUnderKFoldRotation(config,
+                                                                            maxBondOrder,
+                                                                            kFoldRotation);
+  unordered_map<size_t, size_t> invertedSiteMap;
+
+  for (size_t i = 0; i < equivalentEncodingVectorKFold.size(); ++i)
+  {
+
+    // set<size_t> allIndices(equivalentEncodingVector[i].begin(), equivalentEncodingVector[i].end());
+
+    // Invert each position in group i
+    for (auto id : equivalentEncodingVectorKFold[i])
+    {
+      Vector3d pos = config.GetCartesianPositionOfLattice(ssVector[id]); // individual site position
+      Vector3d inverted = 2.0 * transitionPosition - pos;
+
+      // Find the closest matching representative position
+      size_t matchedId = findClosestMatch(positionToIndex, inverted);
+
+      // cout << id << " " << pos.transpose() << " Inverted " << inverted.transpose() << " " << matchedId << endl;
+
+      invertedSiteMap.insert(make_pair(id, matchedId));
+    }
+  }
+
+  // combine the inversion and 3 bar encodings
+
+  std::unordered_set<size_t> visited;
+
+  for (const auto &equivalentSites : equivalentEncodingVectorKFold)
+  {
+    std::vector<size_t> combinedEquivalentSites;
+    for (auto siteId : equivalentSites)
+    {
+      if (visited.count(siteId))
+        continue;
+
+      combinedEquivalentSites.push_back(siteId);
+      visited.insert(siteId);
+
+      if (invertedSiteMap.count(siteId))
+      {
+        size_t pairId = invertedSiteMap[siteId];
+        if (!visited.count(pairId))
+        {
+          combinedEquivalentSites.push_back(pairId);
+          visited.insert(pairId);
+        }
+      }
+    }
+
+    if (!combinedEquivalentSites.empty())
+      equivalentEncodingVectorKBar.push_back(combinedEquivalentSites);
+  }
+
+  // print2DVector(equivalentEncodingVectorKBar);
+
+  return equivalentEncodingVectorKBar;
+}
+
 vector<vector<size_t>> GetEquivalentSitesUnderKFoldRotation(const Config &config,
-                                                                      size_t maxBondOrder,
-                                                                      size_t kFoldRotation)
+                                                            size_t maxBondOrder,
+                                                            size_t kFoldRotation)
 {
   // Get lattice pair (central and nearest neighbor)
   const size_t centralLatticeId = config.GetCentralAtomLatticeId();
@@ -133,7 +279,7 @@ vector<vector<size_t>> GetEquivalentSitesUnderKFoldRotation(const Config &config
       continue;
 
     const Vector3d &position = cartesianPositionVector[i];
-    auto equivalentPositions = getEquivalentPoints(position, rotationAxis, rotationAngle, transitionPosition);
+    auto equivalentPositions = getEquivalentPoints(position, rotationAxis, rotationAngle, transitionPosition, false); // without inversion
 
     vector<size_t> equivalentIndices = {i}; // Include the original position
     processed[i] = true;
@@ -153,7 +299,6 @@ vector<vector<size_t>> GetEquivalentSitesUnderKFoldRotation(const Config &config
         }
       }
     }
-
 
     equivalentEncodingVector.push_back(move(equivalentIndices));
     equivalentEncodingPositionVector.push_back(position);
@@ -522,7 +667,7 @@ VectorXd GetEncodingMigratingAtomPair(
     }
     // Normalized encoding vector
     // Store the result into encodeVector at the correct offset
-    encodeVector.segment(offset, pairEncodeVector.size()) = pairEncodeVector/equivalentSites.size();
+    encodeVector.segment(offset, pairEncodeVector.size()) = pairEncodeVector / equivalentSites.size();
     offset += pairEncodeVector.size(); // Move the offset for next pair
   }
 

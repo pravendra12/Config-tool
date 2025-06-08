@@ -105,4 +105,6 @@ std::unordered_map<LatticeClusterType, size_t, boost::hash<LatticeClusterType>> 
 
 std::unordered_map<LatticeClusterType, std::unordered_set<LatticeCluster, boost::hash<LatticeCluster>>, boost::hash<LatticeClusterType>> LatticeSiteHashMap(const Config &reference_config, const size_t max_cluster_size, const size_t max_bond_order);
 
+
 #endif //LMC_CE_INCLUDE_CLUSTEREXPANSION_H_
+

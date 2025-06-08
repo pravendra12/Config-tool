@@ -12,6 +12,8 @@
 
 #include "Home.h"
 
+using namespace std;
+
 namespace api
 {
 
@@ -172,6 +174,26 @@ namespace api
       std::cout << std::endl;
       std::cout << "num_unique_structures: " << parameter.num_unique_structure_ << std::endl;
     }
+    else if (parameter.method == "GenerateAlloySupercell")
+    {
+      cout << "supercell_size: " << parameter.supercell_size_ << endl;
+      std::cout << "lattice_param: " << parameter.lattice_param_ << std::endl;
+      std::cout << "structure_type: " << parameter.structure_type_ << std::endl;
+      std::cout << "element_set: ";
+      std::transform(parameter.element_set_.begin(), parameter.element_set_.end(),
+                     std::ostream_iterator<std::string>(std::cout, " "),
+                     [](auto elements)
+                     { return elements; });
+      std::cout << std::endl;
+      std::cout << "element_composition: ";
+      std::transform(parameter.element_composition_.begin(), parameter.element_composition_.end(),
+                     std::ostream_iterator<std::string>(std::cout, " "),
+                     [](auto element_comp)
+                     { return std::to_string(element_comp); });
+      cout << endl;
+      cout << "filename: " << parameter.config_filename_ << endl;
+
+    }
   }
 
   void Run(const Parameter &parameter)
@@ -183,6 +205,16 @@ namespace api
     else if (parameter.method == "GenerateODConfigurations")
     {
       BuildGenerateDataFromParameter(parameter);
+    }
+    else if (parameter.method == "GenerateAlloySupercell")
+    {
+      auto config = Config::GenerateAlloySupercell(parameter.supercell_size_,
+      parameter.lattice_param_,
+      parameter.structure_type_,
+      parameter.element_set_,
+      parameter.element_composition_,
+      1);
+      Config::WriteConfig(parameter.config_filename_, config);
     }
 
     else

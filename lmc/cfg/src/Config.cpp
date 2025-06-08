@@ -1100,6 +1100,8 @@ Config Config::GenerateAlloySupercell(
   {
     int num_atoms_el = composition_vector[el] * num_atoms / 100;
 
+    // std::cout << num_atoms_el << std::endl;
+
     for (int i = start_index; i < start_index + num_atoms_el; ++i)
     {
       atom_vector[i] = Element(element_vector[el]);

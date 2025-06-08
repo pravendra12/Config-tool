@@ -8,24 +8,14 @@
 #include "eigen3/Eigen/Dense"
 
 template <typename T>
-void print1DVector(const T &vec) 
-{
-  std::cout << "{";
-  for (size_t i = 0; i < vec.size(); ++i) {
-      std::cout << vec[i];
-      if (i < vec.size() - 1) {
-          std::cout << ", ";
-      }
-  }
-  std::cout << ", }" << std::endl;  // Extra comma before closing brace
-};
+void print1DVector(const std::vector<T> &vec);
 
-void print2DVector(const std::vector<std::vector<size_t>> &vec);
+template <typename T>
+void print2DVector(const std::vector<std::vector<T>> &vec);
 
-void print2DStringVector(const std::vector<std::vector<std::string>> &vec);
+template <typename T>
+void print3DVector(const std::vector<std::vector<std::vector<T>>> &vec);
 
-void print3DVector(const std::vector<std::vector<std::vector<size_t>>> &vec);
-
-void printOneHotEncodeHashmap(const std::unordered_map<std::string, Eigen::RowVectorXd> &hashmap);
+#include "PrintUtility.inl"
 
 #endif // LMC_CONSTANT_INCLUDE_PRINTUTILITY_H_
