@@ -4,4 +4,4 @@ lattice_param 3.2
 structure_type BCC
 element_set Mo Ta
 element_composition 80 20
-config_filename Mo80Ta20_5x5x5.cfg
+config_filename Mo80Ta20_5x5x5

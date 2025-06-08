@@ -214,7 +214,9 @@ namespace api
       parameter.element_set_,
       parameter.element_composition_,
       1);
-      Config::WriteConfig(parameter.config_filename_, config);
+      Config::WriteConfig(parameter.config_filename_ + ".cfg", config);
+      Config::WriteLAMMPSDataFile(parameter.config_filename_ + ".data", config);
+
     }
 
     else
