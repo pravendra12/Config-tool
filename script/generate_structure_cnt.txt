@@ -1,0 +1,14 @@
+simulation_method GenerateStructuresCNT
+structure_type BCC
+supercell_size 10
+lattice_param 3.4
+cutoffs 3.3 4.7 5.6
+element_set W Ta
+element_composition 50 50
+B2_element_pair W Ta  
+num_random_structures 10
+max_num_B2_center 10
+num_sample_per_B2_config 10
+compute_energy false
+output_directory  //media/sf_Phd/CNT/structures/testing
+json_coefficients_filename predictorFileKRA_BO2_WTa.json

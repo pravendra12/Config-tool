@@ -1,7 +1,7 @@
 simulation_method GenerateAlloySupercell
 supercell_size 5
-lattice_param 3.2
+lattice_param 3.4507
 structure_type BCC
 element_set Mo Ta
-element_composition 80 20
-config_filename Mo80Ta20_5x5x5
+element_composition 0 100
+config_filename Mo0Ta100_5x5x5

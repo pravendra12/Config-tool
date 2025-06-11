@@ -1,33 +1,5 @@
 #include "SymmetryCustom.h"
-#include <algorithm>
 
-
-
-
-
-
-
-void RotateLatticeVector(std::unordered_map<size_t, Eigen::RowVector3d>& lattice_id_hashmap, const Eigen::Matrix3d& rotation_matrix) {
-
-  const Eigen::RowVector3d move_distance_after_rotation = Eigen::RowVector3d(0.5, 0.5, 0.5) - (Eigen::RowVector3d(0.5, 0.5, 0.5) * rotation_matrix);
-
-  for (auto &lattice: lattice_id_hashmap) {
-
-    auto relative_position = lattice.second;
-    // rotate
-    relative_position = relative_position * rotation_matrix;
-    // move to new center
-    relative_position += move_distance_after_rotation;
-    relative_position -= relative_position.unaryExpr([](double x) { return std::floor(x); });
-
-    lattice.second = relative_position;
-  }
-}
-// 
-//  
-//  
-//  
-//  
 
 // position compare mmm
 inline bool PositionCompareMMM(const std::pair<size_t, Eigen::RowVector3d>& lhs,
@@ -154,7 +126,7 @@ std::vector<size_t> GetSymmetricallySortedLatticeVectorMMM(
   }
 
   // Rotate lattice vectors
-  RotateLatticeVector(lattice_id_hashmap, config.GetLatticePairRotationMatrix(lattice_id_jump_pair));
+  Config::RotateLatticeVector(lattice_id_hashmap, config.GetLatticePairRotationMatrix(lattice_id_jump_pair));
 
   // Convert unordered_map to vector for sorting
   std::vector<std::pair<size_t, Eigen::RowVector3d>> lattice_id_vector(lattice_id_hashmap.begin(), lattice_id_hashmap.end());
@@ -199,7 +171,7 @@ std::vector<size_t> GetSymmetricallySortedLatticeVectorMM2(
   }
 
   // Rotate lattice vectors
-  RotateLatticeVector(lattice_id_hashmap, config.GetLatticePairRotationMatrix(lattice_id_jump_pair));
+  Config::RotateLatticeVector(lattice_id_hashmap, config.GetLatticePairRotationMatrix(lattice_id_jump_pair));
 
   // Convert unordered_map to vector for sorting
   std::vector<std::pair<size_t, Eigen::RowVector3d>> lattice_id_vector(lattice_id_hashmap.begin(), lattice_id_hashmap.end());
@@ -207,12 +179,6 @@ std::vector<size_t> GetSymmetricallySortedLatticeVectorMM2(
   // Sort the lattice vector based on PositionCompareMMM
   std::sort(lattice_id_vector.begin(), lattice_id_vector.end(), PositionCompareMM2);
   
-
-  std::cout << "MM2 Symmetrically Sorted Positions : " << std::endl;
-  for (const auto& pair : lattice_id_vector){
-    std::cout << pair.first << " : " << pair.second << std::endl;
-  }
-
   // Extract and return only the lattice IDs
   std::vector<size_t> sorted_lattice_ids;
   sorted_lattice_ids.reserve(lattice_id_vector.size());

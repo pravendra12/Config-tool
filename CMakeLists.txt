@@ -14,7 +14,7 @@ cmake_minimum_required(VERSION 3.14)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_STANDARD 11)
 
-project(lmc VERSION 0.1.0)
+project(configTool VERSION 0.1.0)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 ###################################################### SET  PATHS ######################################################
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -69,6 +69,7 @@ file(GLOB PROJECT_SRC
 #     ${PROJECT_SOURCE_DIR}/${PROJECT_NAME}/mc/src/*.cpp
      ${PROJECT_SOURCE_DIR}/${PROJECT_NAME}/pred/src/*.cpp
      ${PROJECT_SOURCE_DIR}/${PROJECT_NAME}/gen/src/*.cpp
+
      ${PROJECT_SOURCE_DIR}/${PROJECT_NAME}/utility/src/*.cpp
 
 )

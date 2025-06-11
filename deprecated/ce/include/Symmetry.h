@@ -11,22 +11,39 @@
 
 #include "Config.h"
 
-class Symmetry {
-
+struct PairClusters 
+{
+      std::vector<std::vector<std::vector<size_t>>> symmetricPairs;
+      std::vector<std::vector<std::vector<size_t>>> nonSymmetricPairs;
 };
 
+class Symmetry 
+
+{
 
 
-void FindPointGroupSymmetry(const Config &config, std::vector<size_t> cluster);
-void FindPointGroupSymmetryMM2(const Config &config, std::vector<size_t> cluster);
-std::pair<std::vector<Eigen::Matrix3i>, std::vector<Eigen::Vector3d>> getSymmetryOperations();
-void equivalence_mapping(const Config &cfg, const std::vector<size_t> &cluster, double symprec, std::vector<std::vector<int>> &equivalence_map);
-void find_equivalent_atoms_with_custom_point_group();
-void FindPointGroupSymmetryCustom(const Config &config, std::vector<std::pair<size_t, Eigen::RowVector3d>> cluster);
-std::pair<std::vector<Eigen::Matrix3d>, std::vector<Eigen::Vector3d>> GetRotationAndTranslationMatrix(const Config &config, const std::vector<size_t> &cluster);
-void equivalent_custom(const Config &config);
-void FindEquivalentClusters(const Config &config, const std::vector<std::vector<size_t>> &pair_clusters);
-std::vector<int> SymmetricallySortLatticeIDs(const Config &config, const std::vector<size_t> &lattice_ids );
+  public:
+    static std::vector<std::vector<size_t>> GetEquivalentSites3Fold(const Config &config, const size_t maxBondOrder);
+    // static std::vector<std::vector<std::vector>> GetEquivalentPairClusters3Fold(const Config config, size_t maxBondOrder);
+    static PairClusters GetEquivalentPairClusters3Fold(const Config &config, size_t maxBondOrder);
+
+  
+};
+
+// std::unordered_map<std::string, Eigen::RowVectorXd>  GetOneHotEncodeHashmap(const std::set<Element> &elementSet);
+
+std::vector<double> GetEncodeVector3F(const Config &config, 
+                                      std::pair<size_t, size_t> jumpPair, 
+                                      std::set<Element> elementSet, 
+                                      size_t maxBondOrder);
+
+std::vector<double> GetEncodingMigratingAtomPairs(const Config &config,
+                                                  size_t migratingAtomId, 
+                                                  std::pair<size_t, size_t> jumpPair, 
+                                                  std::set<Element> elementSet, 
+                                                  size_t maxBondOrder);
 
 
 #endif // LMC_CE_INCLUDE_SYMMETRY_H_
+
+// void GetEncodeVector3F(const Config &config, size_t maxBondOrder);
