@@ -167,6 +167,8 @@ void Parameter::ReadParam(const std::string &param_filename) {
       }
     } else if (segs[0] == "output_directory") {
       output_directory_ = string(segs[1]);
+    } else if (segs[0] == "random_seed") {
+      random_seed_ = static_cast<unsigned int>(std::stoul(segs[1]));
     }
   }
   ifs.close();

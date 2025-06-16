@@ -11,6 +11,7 @@
  */
 
 #include "Home.h"
+#include "GenerateNEBStructure.h"
 
 using namespace std;
 
@@ -24,7 +25,7 @@ namespace api
 
     if (parameter.method == "GenerateNEBStructures")
     {
-      std::cout << "supercell_size: " << parameter.supercell_size_ << std::endl;
+      cout << "supercell_size: " << parameter.supercell_size_ << endl;
       std::cout << "lattice_param: " << parameter.lattice_param_ << std::endl;
       std::cout << "structure_type: " << parameter.structure_type_ << std::endl;
       std::cout << "element_set: ";
@@ -38,14 +39,16 @@ namespace api
                      std::ostream_iterator<std::string>(std::cout, " "),
                      [](auto element_comp)
                      { return std::to_string(element_comp); });
-      std::cout << std::endl;
+      cout << endl;
       std::cout << "cutoffs: ";
       std::transform(parameter.cutoffs_.begin(), parameter.cutoffs_.end(),
                      std::ostream_iterator<std::string>(std::cout, " "),
                      [](auto cutoff)
                      { return std::to_string(cutoff); });
       std::cout << std::endl;
-      std::cout << "num_unique_structures: " << parameter.num_unique_structure_ << std::endl;
+      std::cout << "random_seed: " << parameter.random_seed_ << endl;
+      cout << "filename: " << parameter.config_filename_ << endl;
+
     }
     else if (parameter.method == "GenerateAlloySupercell")
     {
@@ -64,6 +67,8 @@ namespace api
                      [](auto element_comp)
                      { return std::to_string(element_comp); });
       cout << endl;
+      std::cout << "random_seed: " << parameter.random_seed_ << endl;
+
       cout << "filename: " << parameter.config_filename_ << endl;
     }
 
@@ -102,7 +107,22 @@ namespace api
   {
     if (parameter.method == "GenerateNEBStructures")
     {
-      BuildGenerateNEBStructuresFromParameter(parameter);
+      //  BuildGenerateNEBStructuresFromParameter(parameter);
+      auto config = Config::GenerateAlloySupercell(parameter.supercell_size_,
+                                                   parameter.lattice_param_,
+                                                   parameter.structure_type_,
+                                                   parameter.element_vector_,
+                                                   parameter.element_composition_,
+                                                   parameter.random_seed_);
+
+      config.UpdateNeighborList(parameter.cutoffs_);
+       
+      pair<size_t, size_t> latticeIdJumpPair = {config.GetCentralAtomLatticeId(),
+       config.GetNeighborLatticeIdVectorOfLattice(config.GetCentralAtomLatticeId(), 1)[0]};
+      
+      GenerateNEBStructure(parameter.config_filename_,
+                           config,
+                           latticeIdJumpPair);
     }
     else if (parameter.method == "GenerateAlloySupercell")
     {
@@ -111,7 +131,7 @@ namespace api
                                                    parameter.structure_type_,
                                                    parameter.element_vector_,
                                                    parameter.element_composition_,
-                                                   1);
+                                                   parameter.random_seed_);
       Config::WriteConfig(parameter.config_filename_ + ".cfg", config);
       Config::WriteLAMMPSDataFile(parameter.config_filename_ + ".data", config);
     }

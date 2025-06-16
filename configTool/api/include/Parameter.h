@@ -194,6 +194,10 @@ struct Parameter {
 
   /// Output directory where the configuraiton will be saved
   std::string output_directory_{};
+
+
+  /// Random seed for configuration generation
+  unsigned int random_seed_{};
   
 };
 } // namespace api

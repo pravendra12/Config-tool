@@ -1,8 +1,9 @@
-simulation_method GenerateAlloySupercell
+simulation_method GenerateNEBStructures
 supercell_size 5
 lattice_param 3.4507
 structure_type BCC
 element_set Mo Ta
 element_composition 0 100
-config_filename Mo0Ta100_5x5x5
+cutoffs 3.3
 random_seed 1
+config_filename Mo0Ta100_5x5x5
