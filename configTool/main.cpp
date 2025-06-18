@@ -11,8 +11,9 @@ int main(int argc, char *argv[]) {
   api::Print(parameter);
   api::Run(parameter);
 }
-/*
 
+
+/*
 using namespace std;
 #include "ConfigEncoding.h"
 #include "GenerateStructuresWithB2.h"
@@ -22,51 +23,47 @@ using namespace std;
 int main()
 {
   size_t sSize = 10;
-  vector<string> elementVector = {"Ta", "W"};
-  vector<double> compositionVector = {50, 50};
+  double latticeParam = 3.2;
+  string baseElement = "Mo";
+  string soluteElement = "Ta";
 
-  vector<double> cutoffs = {3.3, 4.7, 5.6};
+  vector<double> cutoffs = {3};
 
-  auto trainingSupercell = Config::GeneratePristineSupercell(5, 3.4, "X", "BCC");
-  trainingSupercell.UpdateNeighborList(cutoffs);
-  auto elementPair = make_pair(Element("W"), Element("Ta"));
-  
-  Config cfg;
-  int idx = 0;
-  do 
-  {
-    cfg = Config::GenerateAlloySupercell(sSize, 3.4, "BCC", elementVector, compositionVector, idx);
-    idx++;
-    cout << cfg.GetElementOfLattice(cfg.GetCentralAtomLatticeId()).GetElementString() << endl;
-  }
-  while (elementPair.first != cfg.GetElementOfLattice(cfg.GetCentralAtomLatticeId()));
-
+  auto cfg = Config::GeneratePristineSupercell(sSize, latticeParam, baseElement, "BCC");
   cfg.UpdateNeighborList(cutoffs);
 
+  // cout << cfg.GetNeighborLatticeIdVectorOfLattice( 0, 1).size() << endl;
 
+  auto centerId = cfg.GetCentralAtomLatticeId();
+  auto latticeJumpPair = make_pair(centerId, cfg.GetNeighborLatticeIdVectorOfLattice(centerId, 1)[0]);
 
-  set<Element> elementSet = {Element("X"), Element("W"), Element("Ta")};
+  // for (const auto id : cfg.GetNeighboringLatticeIdSetOfPair(latticeJumpPair, 1))
+  // {
+  //   cfg.SetElementOfLattice(id, Element(soluteElement));
+  // }
+  
+  string ss = to_string(sSize);
 
-  return 0;
+  // cfg.SetElementOfLattice(latticeJumpPair.second, Element("X"));
+  // cfg.SetElementOfLattice(latticeJumpPair.first, Element("X"));
 
-  GenerateStructureCNT cnt(
-      "predictorFileKRA_BO2_WTa.json",
-      cfg,
-      trainingSupercell,
-      10,
-      elementSet,
-      compositionVector);
+  // Config::WriteConfig("//media/sf_Phd/nebBenchmark/TaW14/ss_" + ss + "/Config/TaW14_" +  ss + "x" + ss + "x" + ss + ".cfg.gz", cfg);
+  cout << "Here 1" << endl;
+  // GenerateNEBStructure("//media/sf_Phd/nebBenchmark/Ta14W_" +  ss + "x" + ss + "x" + ss, cfg, latticeJumpPair);
+  //media/sf_Phd/nebBenchmark/TaW14
 
-  cnt.GenerateRandomStructures(2, true, true, "//media/sf_Phd/CNT/structures/WTa");
-  cnt.GenerateStructureWithB2(
-      cfg,
-      1000,
-      1,
-      elementPair,
-      false,
-      "//media/sf_Phd/CNT/structures/WTa");
+  map<Element, size_t> elementMap;
 
+  // 1 to 4 are Nb, Mo, Ta and W.
+  // vector<string> elementSetMLIP = {"Nb", "Mo", "Ta", "W"};
+  // size_t idx = 1;
+  // for (const auto element : elementSetMLIP)
+  // {
+  //   elementMap[Element(element)] = idx;
+  //   idx++;
+  // }
 
+  Config::WriteLAMMPSDataFileCustom("//media/sf_Phd/nebBenchmark/test.lammps", cfg,elementMap);
 
-      return 0;
-}*/
+}
+*/

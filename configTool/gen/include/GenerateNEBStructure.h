@@ -8,8 +8,9 @@ using namespace std;
 // Post-processing required to make the files compatible with LAMMPS
 void GenerateNEBStructure(
   const string &filename, 
-  const Config &config, 
-  const pair<size_t, size_t> &latticeIdJumpPair);
+  Config &config, 
+  const pair<size_t, size_t> &latticeIdJumpPair, 
+  map<Element, size_t> &elementMap);
 
 #endif // CONFIGTOOL_GEN_INCLUDE_GENERATENEBSTRUCTURE_H_
 

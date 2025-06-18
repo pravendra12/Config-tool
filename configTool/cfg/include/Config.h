@@ -280,6 +280,11 @@ public:
 
     static void WriteLAMMPSDataFile(const std::string &filename, const Config &config_out);
 
+    static void WriteLAMMPSDataFileCustom(
+        const std::string &filename,
+        const Config &config_out,
+        std::map<Element, size_t> &element_map);
+
     /*! \brief Write the configuration to a file.
      *  \param filename  The name of the file to write the configuration to.
      */

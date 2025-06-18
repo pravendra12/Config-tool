@@ -48,7 +48,6 @@ namespace api
       std::cout << std::endl;
       std::cout << "random_seed: " << parameter.random_seed_ << endl;
       cout << "filename: " << parameter.config_filename_ << endl;
-
     }
     else if (parameter.method == "GenerateAlloySupercell")
     {
@@ -116,13 +115,23 @@ namespace api
                                                    parameter.random_seed_);
 
       config.UpdateNeighborList(parameter.cutoffs_);
-       
+
       pair<size_t, size_t> latticeIdJumpPair = {config.GetCentralAtomLatticeId(),
-       config.GetNeighborLatticeIdVectorOfLattice(config.GetCentralAtomLatticeId(), 1)[0]};
+                                                config.GetNeighborLatticeIdVectorOfLattice(config.GetCentralAtomLatticeId(), 1)[0]};
+      
+      // 1 to 4 are Nb, Mo, Ta and W.
+      map<Element,size_t> elementMap;
+      size_t idx = 1;
+      for (const auto element : parameter.element_vector_)
+      {
+        elementMap[Element(element)] = idx;
+        idx++;
+      }
       
       GenerateNEBStructure(parameter.config_filename_,
                            config,
-                           latticeIdJumpPair);
+                           latticeIdJumpPair, 
+                           elementMap);
     }
     else if (parameter.method == "GenerateAlloySupercell")
     {
@@ -133,7 +142,17 @@ namespace api
                                                    parameter.element_composition_,
                                                    parameter.random_seed_);
       Config::WriteConfig(parameter.config_filename_ + ".cfg", config);
-      Config::WriteLAMMPSDataFile(parameter.config_filename_ + ".data", config);
+
+      // 1 to 4 are Nb, Mo, Ta and W.
+      map<Element,size_t> elementMap;
+      size_t idx = 1;
+      for (const auto element : parameter.element_vector_)
+      {
+        elementMap[Element(element)] = idx;
+        idx++;
+      }
+
+      Config::WriteLAMMPSDataFileCustom(parameter.config_filename_ + ".data", config, elementMap);
     }
 
     else if (parameter.method == "GenerateStructuresCNT")

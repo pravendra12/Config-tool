@@ -1072,7 +1072,6 @@ Config Config::GenerateAlloySupercell(
   return supercell;
 }
 
-
 void Config::WriteLAMMPSDataFile(
     const std::string &filename,
     const Config &config_out)
@@ -1087,7 +1086,6 @@ void Config::WriteLAMMPSDataFile(
 
   // Header section
   ofs << "LAMMPS data file\n\n";
-
 
   auto atomVector = config_out.GetAtomVector();
 
@@ -1107,8 +1105,6 @@ void Config::WriteLAMMPSDataFile(
     }
   }
 
-
-
   size_t num_atoms = config_out.GetNumAtoms();
   ofs << num_atoms - numVacancy << " atoms\n";
 
@@ -1119,7 +1115,6 @@ void Config::WriteLAMMPSDataFile(
   ofs << "0.0 " << config_out.GetBasis()(0, 0) << " xlo xhi\n";
   ofs << "0.0 " << config_out.GetBasis()(1, 1) << " ylo yhi\n";
   ofs << "0.0 " << config_out.GetBasis()(2, 2) << " zlo zhi\n\n";
-
 
   // Map element names to atom types (indices)
   std::map<Element, size_t> element_map;
@@ -1146,7 +1141,100 @@ void Config::WriteLAMMPSDataFile(
   size_t atomId = 0;
   for (size_t i = 0; i < num_atoms; ++i)
   {
-    const auto &atom = atomVector[i]; 
+    const auto &atom = atomVector[i];
+
+    if (atom != Element("X"))
+    {
+      const auto &cartesian_position = config_out.cartesian_position_matrix_.col(static_cast<int>(config_out.atom_to_lattice_hashmap_.at(i)));
+
+      // Atom ID, atom type (get it from the map), x, y, z coordinates
+      ofs << (atomId + 1) << " " << element_map[atom] << " "; // Atom ID and type
+      ofs << cartesian_position.transpose().format(fmt);
+      ofs << std::endl;
+
+      atomId++;
+    }
+  }
+
+  ofs.close();
+
+  std::cout << "LAMMPS data file written to " << filename << std::endl;
+}
+
+void Config::WriteLAMMPSDataFileCustom(
+  const std::string &filename, 
+  const Config &config_out, 
+  std::map<Element, size_t> &element_map)
+{
+
+  std::ofstream ofs(filename, std::ios::out | std::ios::trunc);
+  if (!ofs.is_open())
+  {
+    std::cerr << "Error opening file: " << filename << std::endl;
+    return;
+  }
+
+  // Header section
+  ofs << "LAMMPS data file\n\n";
+
+  set<Element> elementSet;
+
+  auto atomVector = config_out.GetAtomVector();
+
+  size_t numVacancy = 0;
+  for (const auto &atom : atomVector)
+  {
+    if (atom == Element("X"))
+    {
+      numVacancy += 1;
+    }
+    else
+    {
+      if (elementSet.find(atom) == elementSet.end())
+      {
+        elementSet.insert(atom);
+      }
+    }
+  }
+
+  if (element_map.empty())
+  {
+    size_t idx = 1;
+    for (const auto element : elementSet)
+    {
+      element_map[element] = idx;
+      idx++;
+    }
+  }
+
+  size_t num_atoms = config_out.GetNumAtoms();
+  ofs << num_atoms - numVacancy << " atoms\n";
+
+  ofs << element_map.size() << " atom types\n\n";
+
+  // Box dimensions - You can adapt this part based on your system
+  ofs << "0.0 " << config_out.GetBasis()(0, 0) << " xlo xhi\n";
+  ofs << "0.0 " << config_out.GetBasis()(1, 1) << " ylo yhi\n";
+  ofs << "0.0 " << config_out.GetBasis()(2, 2) << " zlo zhi\n\n";
+
+  // Masses section
+  ofs << "Masses\n\n";
+  for (const auto &element : element_map)
+  {
+    // Writing atom type and mass, using element.first (name) and atom's mass
+    ofs << element.second << " " << element.first.GetMass() << "\n";
+  }
+
+  // Atoms section
+  ofs << "\nAtoms\n\n";
+
+  // Format: atom_id atom_type x y z
+  Eigen::IOFormat fmt(Eigen::StreamPrecision, Eigen::DontAlignCols, " ", "\n", "", "", "", "");
+
+  size_t atomId = 0;
+  for (size_t i = 0; i < num_atoms; ++i)
+  {
+    const auto &atom = atomVector[i];
 
     if (atom != Element("X"))
     {
@@ -1323,5 +1411,3 @@ void Config::WriteXyzExtended(const std::string &filename,
     fos << std::endl;
   }
 }
-
-
