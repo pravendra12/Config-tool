@@ -6,6 +6,7 @@
 #include "ConfigEncoding.h"
 #include "PotentialEnergyEstimator.h"
 #include "B2Ordering.h"
+#include "ClusterExpansion.h"
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -18,7 +19,7 @@ namespace fs = std::filesystem;
 using namespace std;
 using namespace Eigen;
 
-class GenerateStructureCNT
+class GenerateStructureCNT : public PotentialEnergyEstimator
 {
 public:
   GenerateStructureCNT(
@@ -28,6 +29,8 @@ public:
       const size_t supercellSize,
       set<Element> &elementSet,
       const vector<double> &compositionVector);
+
+  double GetEnergyOfConfig(const Config &config) const;
 
   void GenerateRandomStructures(
       const size_t numStructures,
@@ -69,8 +72,8 @@ private:
   const string structureType_ = "BCC";
   const double latticeParam_ = 3.4;
   const vector<double> cutoffs_ = {3.3, 4.7, 5.6};
-
-  const PotentialEnergyEstimator peEstimator_;
+  
+  unordered_set<LatticeCluster, boost::hash<LatticeCluster>> allLatticeClusterSet_;
 };
 
 #endif // CONFIGTOOL_GEN_INCLUDE_GENERATESTRUCTURECNT_H_

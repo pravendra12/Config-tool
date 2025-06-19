@@ -26,7 +26,6 @@ using namespace Eigen;
 class PotentialEnergyEstimator
 {
 public:
-
     /*! @brief Constructor for Potential Energy Estimator
         @param predictorFilename File name which contains the fitting coefficients
         @param referenceConfig   Configuration used for defining the object
@@ -102,7 +101,7 @@ public:
         const Config &config,
         const std::pair<size_t, size_t> &latticeIdJumpPair) const;
 
-private:
+protected:
     /*! @brief Maximum Cluster Size
      */
     const size_t maxClusterSize_{};
@@ -134,5 +133,8 @@ private:
                         boost::hash<LatticeClusterType>>
         latticeClusterTypeCount_{};
 };
+
+static std::unordered_map<ClusterType, size_t, boost::hash<ClusterType>>
+ConvertSetToHashMap(const std::set<ClusterType> &cluster_type_set);
 
 #endif // LMC_PRED_INCLUDE_POTENTIALENERGYESTIMATOR_H_

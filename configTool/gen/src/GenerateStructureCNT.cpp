@@ -6,7 +6,11 @@ GenerateStructureCNT::GenerateStructureCNT(
     const Config &trainingConfig,
     const size_t supercellSize,
     set<Element> &elementSet,
-    const vector<double> &compositionVector) : supercellSize_(supercellSize),
+    const vector<double> &compositionVector) : PotentialEnergyEstimator(predictorFilename,
+                                                                        trainingConfig,
+                                                                        config,
+                                                                        elementSet),
+                                               supercellSize_(supercellSize),
                                                elementVector_([&]()
                                                               {
                                                   vector<string> vec;
@@ -15,11 +19,12 @@ GenerateStructureCNT::GenerateStructureCNT(
                                                       vec.emplace_back(element.GetElementString());
                                                   return vec; }()),
                                                compositionVector_(compositionVector),
-                                               peEstimator_(
-                                                   predictorFilename,
-                                                   config,
-                                                   trainingConfig,
-                                                   elementSet)
+                                               allLatticeClusterSet_(
+                                                   FindAllLatticeClusters(
+                                                       config,
+                                                       maxClusterSize_,
+                                                       maxBondOrder_,
+                                                       {}))
 
 {
   if (config.GetNumAtoms() != supercellSize * supercellSize * supercellSize * 2)
@@ -31,6 +36,33 @@ GenerateStructureCNT::GenerateStructureCNT(
         << " atoms for a BCC supercell of size " << supercellSize << "^3.";
     throw runtime_error(oss.str());
   }
+}
+
+double GenerateStructureCNT::GetEnergyOfConfig(const Config &config) const
+{
+  auto clusterTypeCountHashMap = clusterTypeCountHashMap_;
+
+  for (const auto &latticeCluster : allLatticeClusterSet_)
+  {
+    auto atomClusterType = IdentifyAtomClusterType(config, latticeCluster.GetLatticeIdVector());
+    clusterTypeCountHashMap.at(ClusterType(atomClusterType, latticeCluster.GetClusterType()))++;
+  }
+  Eigen::VectorXd encodeVector(initializedClusterTypeSet_.size());
+  int idx = 0;
+  for (const auto &clusterType : initializedClusterTypeSet_)
+  {
+    // Count of Cluster Types for given configuration
+    auto count_bond = static_cast<double>(clusterTypeCountHashMap.at(clusterType));
+    // Count of Cluster Types for normalization
+    auto total_bond = static_cast<double>(latticeClusterTypeCount_.at(clusterType.lattice_cluster_type_));
+
+    encodeVector(idx) = count_bond / total_bond;
+    ++idx;
+  }
+
+  double energy = betaCE_.dot(encodeVector);
+
+  return energy;
 }
 
 void GenerateStructureCNT::GenerateRandomStructures(
@@ -52,7 +84,7 @@ void GenerateStructureCNT::GenerateRandomStructures(
     double energyOfConfig = 0;
     if (doComputeEnergy)
     {
-      energyOfConfig = peEstimator_.GetEnergy(randomConfig);
+      energyOfConfig = GetEnergyOfConfig(randomConfig);
       cout << i << "\t" << energyOfConfig << endl;
     }
 
@@ -117,7 +149,7 @@ void GenerateStructureCNT::GenerateStructureWithB2(
 
   for (int numB2 = 1; numB2 < numB2Centers + 1; numB2++)
   {
-    size_t selectedLatticeId = selectedLatticeIdVector[numB2-1];
+    size_t selectedLatticeId = selectedLatticeIdVector[numB2 - 1];
 
     if (config.GetElementOfLattice(selectedLatticeId) == alphaElement)
     {
@@ -133,6 +165,9 @@ void GenerateStructureCNT::GenerateStructureWithB2(
     // How many configuration to save
     for (int numSample = 1; numSample < numSamplesPerB2Config + 1; numSample++)
     {
+      // Now we have configuration with B2 embedded in it
+      // Next task is to build random config around it such that no B2 is there
+      // And also to get random configuration randomize the B2 precipitate
       BuildConfigWithB2(config, numB2, elementMap, visitedSites, numSample, doComputeEnergy, outputDir);
     }
 
@@ -291,7 +326,7 @@ void GenerateStructureCNT::BuildConfigWithB2(Config &config,
   double energyOfConfig = 0;
   if (doComputeEnergy)
   {
-    energyOfConfig = peEstimator_.GetEnergy(config);
+    energyOfConfig = GetEnergyOfConfig(config);
     cout << numB2Center << "\tR" << randomId << "\t" << energyOfConfig << endl;
   }
 

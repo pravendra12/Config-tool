@@ -16,7 +16,7 @@
  *  @param clusterTypeSet  The set of cluster types
  *  @return                A map with the number of appearance of each cluster type
  */
-static unordered_map<ClusterType, size_t, boost::hash<ClusterType>> ConvertSetToHashMap(
+unordered_map<ClusterType, size_t, boost::hash<ClusterType>> ConvertSetToHashMap(
     const set<ClusterType> &clusterTypeSet)
 {
   unordered_map<ClusterType, size_t, boost::hash<ClusterType>> clusterTypeCount;
