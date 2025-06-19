@@ -7,8 +7,8 @@ GenerateStructureCNT::GenerateStructureCNT(
     const size_t supercellSize,
     set<Element> &elementSet,
     const vector<double> &compositionVector) : PotentialEnergyEstimator(predictorFilename,
-                                                                        trainingConfig,
                                                                         config,
+                                                                        trainingConfig,
                                                                         elementSet),
                                                supercellSize_(supercellSize),
                                                elementVector_([&]()
@@ -47,8 +47,10 @@ double GenerateStructureCNT::GetEnergyOfConfig(const Config &config) const
     auto atomClusterType = IdentifyAtomClusterType(config, latticeCluster.GetLatticeIdVector());
     clusterTypeCountHashMap.at(ClusterType(atomClusterType, latticeCluster.GetClusterType()))++;
   }
+
   Eigen::VectorXd encodeVector(initializedClusterTypeSet_.size());
   int idx = 0;
+
   for (const auto &clusterType : initializedClusterTypeSet_)
   {
     // Count of Cluster Types for given configuration
