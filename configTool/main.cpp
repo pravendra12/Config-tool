@@ -27,47 +27,19 @@ int main()
 
   string predictorFilename = "/home/pravendra3/Documents/Config-tool/bin/predictorFileKRA_BO2_WTa.json";
 
-  auto config = Config::GenerateAlloySupercell(10, 3.4, "BCC", elementVector, compositionVector, 1);
+  auto config = Config::GenerateAlloySupercell(5, 3.4, "BCC", elementVector, compositionVector, 1);
   config.UpdateNeighborList({3.3, 4.7, 5.6});
 
-  auto trainingConfig = Config::GeneratePristineSupercell(5, 3.4, "X", "BCC");
-  trainingConfig.UpdateNeighborList({3.3, 4.7, 5.6});
+  for (int i = 6; i < 10; i++)
+  {
+    B2Ordering::AddB2Precipitate(config, i, make_pair(Element("Ta"), Element("W")));
 
-  set<Element> elementSet = {Element("Ta"), Element("W"), Element("X")};
+    Config::WriteConfig("//media/sf_Phd/Structures/WithB2/config_nB2_" + to_string(i) + ".cfg.gz", config);
+  }
 
-  GenerateStructureCNT cnt(
-      predictorFilename,
-      config,
-      trainingConfig,
-      10,
-      elementSet,
-      compositionVector);
 
-  auto start = std::chrono::high_resolution_clock::now();
 
-  double energy = cnt.GetEnergyOfConfig(config);
-
-  auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double> elapsed = end - start;
-
-  std::cout << "Energy: " << energy << std::endl;
-  std::cout << "Elapsed time: " << elapsed.count() << " seconds" << std::endl;
-
-  PotentialEnergyEstimator peEstimator(
-      predictorFilename,
-      config,
-      trainingConfig,
-      elementSet);
-
-  start = std::chrono::high_resolution_clock::now();
-
-  double energyPE = peEstimator.GetEnergy(config);
-
-  end = std::chrono::high_resolution_clock::now();
-  elapsed = end - start;
-
-  std::cout << "Energy: " << energyPE << std::endl;
-  std::cout << "Elapsed time due to energy from PE: " << elapsed.count() << " seconds" << std::endl;
+  
 }
 */
 

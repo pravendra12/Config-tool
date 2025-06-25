@@ -132,16 +132,12 @@ void B2Ordering::InitializeBetaLatticeSites()
 
 void B2Ordering::AddB2Precipitate(Config &config,
                                   const size_t numB2Centers,
-                                  const vector<Element> &elementVector)
+                                  const pair<Element, Element> &b2ElementPair)
 {
-  if (elementVector.size() != 2)
-  {
-    throw std::runtime_error("B2 ordering requires exactly two elements");
-  }
-
+  
   // Extract the two elements;
-  Element alphaElement = elementVector[0];
-  Element betaElement = elementVector[1];
+  Element alphaElement = b2ElementPair.first;
+  Element betaElement = b2ElementPair.second;
 
   size_t totalSites = config.GetNumAtoms();
 

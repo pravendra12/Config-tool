@@ -225,6 +225,41 @@ namespace api
           parameter.output_directory_);
     }
 
+    else if (parameter.method == "GenerateNEBStructureWithB2")
+    {
+      //  BuildGenerateNEBStructuresFromParameter(parameter);
+      auto config = Config::GenerateAlloySupercell(parameter.supercell_size_,
+                                                   parameter.lattice_param_,
+                                                   parameter.structure_type_,
+                                                   parameter.element_vector_,
+                                                   parameter.element_composition_,
+                                                   parameter.random_seed_);
+
+      config.UpdateNeighborList(parameter.cutoffs_);
+
+      pair<Element, Element> b2ElementPair = {Element(parameter.b2_element_pair_.first), 
+                                       Element(parameter.b2_element_pair_.second)};
+
+      B2Ordering::AddB2Precipitate(config, 4, b2ElementPair);
+
+      pair<size_t, size_t> latticeIdJumpPair = {config.GetCentralAtomLatticeId(),
+                                                config.GetNeighborLatticeIdVectorOfLattice(config.GetCentralAtomLatticeId(), 1)[0]};
+      
+      // 1 to 4 are Nb, Mo, Ta and W.
+      map<Element,size_t> elementMap;
+      size_t idx = 1;
+      for (const auto element : parameter.element_vector_)
+      {
+        elementMap[Element(element)] = idx;
+        idx++;
+      }
+      
+      GenerateNEBStructure(parameter.config_filename_,
+                           config,
+                           latticeIdJumpPair, 
+                           elementMap);
+    }
+
     else
     {
       std::cout << "No such method: " << parameter.method << std::endl;

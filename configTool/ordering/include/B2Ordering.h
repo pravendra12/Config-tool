@@ -111,7 +111,7 @@ public:
    */
   static void AddB2Precipitate(Config &config,
                                const size_t numB2Centers,
-                               const vector<Element> &elementVector);
+                               const pair<Element, Element> &b2ElementPair);
   
   /**
    * @brief Reassign the element of form a highly ordered config such that elements
