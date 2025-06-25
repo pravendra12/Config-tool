@@ -48,6 +48,35 @@ namespace api
       std::cout << std::endl;
       std::cout << "random_seed: " << parameter.random_seed_ << endl;
       cout << "filename: " << parameter.config_filename_ << endl;
+    } 
+    else if (parameter.method == "GenerateNEBStructuresWithB2")
+    {
+      cout << "supercell_size: " << parameter.supercell_size_ << endl;
+      std::cout << "lattice_param: " << parameter.lattice_param_ << std::endl;
+      std::cout << "structure_type: " << parameter.structure_type_ << std::endl;
+      std::cout << "element_set: ";
+      std::transform(parameter.element_vector_.begin(), parameter.element_vector_.end(),
+                     std::ostream_iterator<std::string>(std::cout, " "),
+                     [](auto elements)
+                     { return elements; });
+      std::cout << std::endl;
+      std::cout << "element_composition: ";
+      std::transform(parameter.element_composition_.begin(), parameter.element_composition_.end(),
+                     std::ostream_iterator<std::string>(std::cout, " "),
+                     [](auto element_comp)
+                     { return std::to_string(element_comp); });
+      cout << endl;
+      std::cout << "cutoffs: ";
+      std::transform(parameter.cutoffs_.begin(), parameter.cutoffs_.end(),
+                     std::ostream_iterator<std::string>(std::cout, " "),
+                     [](auto cutoff)
+                     { return std::to_string(cutoff); });
+      std::cout << std::endl;
+      cout << "B2_element_pair: " << parameter.b2_element_pair_.first << " "
+      << parameter.b2_element_pair_.second << endl;
+      cout << "max_num_B2_center: " << parameter.max_num_B2_center_ << endl;
+      std::cout << "random_seed: " << parameter.random_seed_ << endl;
+      cout << "filename: " << parameter.config_filename_ << endl;
     }
     else if (parameter.method == "GenerateAlloySupercell")
     {
@@ -225,7 +254,7 @@ namespace api
           parameter.output_directory_);
     }
 
-    else if (parameter.method == "GenerateNEBStructureWithB2")
+    else if (parameter.method == "GenerateNEBStructuresWithB2")
     {
       //  BuildGenerateNEBStructuresFromParameter(parameter);
       auto config = Config::GenerateAlloySupercell(parameter.supercell_size_,
@@ -239,8 +268,8 @@ namespace api
 
       pair<Element, Element> b2ElementPair = {Element(parameter.b2_element_pair_.first), 
                                        Element(parameter.b2_element_pair_.second)};
-
-      B2Ordering::AddB2Precipitate(config, 4, b2ElementPair);
+      
+      GenerateStructureWithB2(config, parameter.max_num_B2_center_, b2ElementPair);
 
       pair<size_t, size_t> latticeIdJumpPair = {config.GetCentralAtomLatticeId(),
                                                 config.GetNeighborLatticeIdVectorOfLattice(config.GetCentralAtomLatticeId(), 1)[0]};

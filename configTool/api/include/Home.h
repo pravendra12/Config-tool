@@ -16,6 +16,8 @@
 #include "Parameter.h"
 #include "Config.h"
 #include "GenerateStructureCNT.h"
+#include "GenerateStructuresWithB2.h"
+
 
 // #include "KineticMcFirstOmp.h"
 // #include "SimulatedAnnealing.h"

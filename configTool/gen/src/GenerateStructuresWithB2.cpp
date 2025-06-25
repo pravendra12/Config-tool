@@ -85,26 +85,14 @@ void buildSingleB2(Config &config,
 }
 
 void BuildConfigWithB2(Config &config,
-                       int i,
                        map<Element, int> elementMap,
-                       const unordered_set<size_t> &visitedSites, int randomId)
+                       const unordered_set<size_t> &visitedSites)
 {
 
   random_device rd;
   mt19937 gen(rd());
 
   auto numAtoms = config.GetNumAtoms();
-  //
-  cout << "After B2" << endl;
-
-  for (auto entry : elementMap)
-  {
-    cout << entry.first.GetElementString() << " " << entry.second << endl;
-  }
-
-  // Randomly assign the remaining elements to those  lattice Ids which are not visited yet
-
-  // Convert unordered_set to vector and shuffle
 
   vector<size_t> remainingLatticeIds;
 
@@ -186,20 +174,11 @@ void BuildConfigWithB2(Config &config,
       }
     }
   }
-
-  cout << "After assignment" << endl;
-
-  for (auto entry : elementMap)
-  {
-    cout << entry.first.GetElementString() << " " << entry.second << endl;
-  }
-
-  Config::WriteConfig("//media/sf_Phd/CNT/structures/b2_" + to_string(i) + "_" + to_string(randomId) + ".cfg.gz", config);
 }
 
 void GenerateStructureWithB2(Config &config,
                              size_t numB2Centers,
-                             pair<Element, Element> &b2OrderedElements, int randomId)
+                             pair<Element, Element> &b2ElementPair)
 {
   auto atomVector = config.GetAtomVector();
 
@@ -210,13 +189,10 @@ void GenerateStructureWithB2(Config &config,
     elementMap[atom]++;
   }
 
-  for (auto entry : elementMap)
-  {
-    cout << entry.first.GetElementString() << " " << entry.second << endl;
-  }
+  
 
-  Element alphaElement = b2OrderedElements.first;
-  Element betaElement = b2OrderedElements.second;
+  Element alphaElement = b2ElementPair.first;
+  Element betaElement = b2ElementPair.second;
 
   size_t numAtoms = config.GetNumAtoms();
 
@@ -250,12 +226,6 @@ void GenerateStructureWithB2(Config &config,
 
     b2CenterLatticeIdSet.insert(selectedLatticeId);
 
-    BuildConfigWithB2(config, i, elementMap, visitedSites, 0);
-    BuildConfigWithB2(config, i, elementMap, visitedSites, 1);
-    BuildConfigWithB2(config, i, elementMap, visitedSites, 2);
-    BuildConfigWithB2(config, i, elementMap, visitedSites, 3);
-
-
     // possible b2 centers based on the previous selected lattice Id
     vector<size_t> possibleB2Centers = config.GetNeighborLatticeIdVectorOfLattice(selectedLatticeId, 1);
     for (auto id : possibleB2Centers)
@@ -266,4 +236,7 @@ void GenerateStructureWithB2(Config &config,
       }
     }
   }
+
+  BuildConfigWithB2(config, elementMap, visitedSites);
+
 }

@@ -8,6 +8,6 @@ using namespace std;
 
 void GenerateStructureWithB2(Config &config,
                              size_t numB2Centers,
-                             pair<Element, Element> &b2OrderedElements, int randomId);
+                             pair<Element, Element> &b2ElementPair);
 
 #endif // CONFIGTOOL_GEN_INCLUDE_GENERATESTRUCTURESWITHB2_H_

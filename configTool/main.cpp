@@ -9,8 +9,8 @@ int main(int argc, char *argv[]) {
   api::Print(parameter);
   api::Run(parameter);
 }
-
 /*
+
 using namespace std;
 #include "ConfigEncoding.h"
 #include "GenerateStructuresWithB2.h"
@@ -23,18 +23,20 @@ namespace fs = std::filesystem;
 int main()
 {
   vector<string> elementVector = {"Ta", "W"};
-  vector<double> compositionVector = {50, 50};
+  vector<double> compositionVector = {75, 25};
 
   string predictorFilename = "/home/pravendra3/Documents/Config-tool/bin/predictorFileKRA_BO2_WTa.json";
 
-  auto config = Config::GenerateAlloySupercell(5, 3.4, "BCC", elementVector, compositionVector, 1);
-  config.UpdateNeighborList({3.3, 4.7, 5.6});
+  auto elementPair = make_pair(Element("Ta"), Element("W"));
 
-  for (int i = 6; i < 10; i++)
+  for (size_t i = 6; i < 10; i++)
   {
-    B2Ordering::AddB2Precipitate(config, i, make_pair(Element("Ta"), Element("W")));
+    auto config = Config::GenerateAlloySupercell(5, 3.4, "BCC", elementVector, compositionVector, 1);
+    config.UpdateNeighborList({3.3, 4.7, 5.6});
 
-    Config::WriteConfig("//media/sf_Phd/Structures/WithB2/config_nB2_" + to_string(i) + ".cfg.gz", config);
+    GenerateStructureWithB2(config, i, elementPair);
+
+    Config::WriteConfig("//media/sf_Phd/Structures/WithB2/config_centeredB2_" + to_string(i) + ".cfg.gz", config);
   }
 
 
@@ -42,7 +44,6 @@ int main()
   
 }
 */
-
 /*
 int main() {
     std::vector<size_t> supercellSizes = {5, 7, 10};
