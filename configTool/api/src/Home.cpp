@@ -48,7 +48,7 @@ namespace api
       std::cout << std::endl;
       std::cout << "random_seed: " << parameter.random_seed_ << endl;
       cout << "filename: " << parameter.config_filename_ << endl;
-    } 
+    }
     else if (parameter.method == "GenerateNEBStructuresWithB2")
     {
       cout << "supercell_size: " << parameter.supercell_size_ << endl;
@@ -73,7 +73,7 @@ namespace api
                      { return std::to_string(cutoff); });
       std::cout << std::endl;
       cout << "B2_element_pair: " << parameter.b2_element_pair_.first << " "
-      << parameter.b2_element_pair_.second << endl;
+           << parameter.b2_element_pair_.second << endl;
       cout << "max_num_B2_center: " << parameter.max_num_B2_center_ << endl;
       std::cout << "random_seed: " << parameter.random_seed_ << endl;
       cout << "filename: " << parameter.config_filename_ << endl;
@@ -135,6 +135,7 @@ namespace api
   {
     if (parameter.method == "GenerateNEBStructures")
     {
+      
       //  BuildGenerateNEBStructuresFromParameter(parameter);
       auto config = Config::GenerateAlloySupercell(parameter.supercell_size_,
                                                    parameter.lattice_param_,
@@ -143,23 +144,33 @@ namespace api
                                                    parameter.element_composition_,
                                                    parameter.random_seed_);
 
+     
+
+      auto atomVector = config.GetAtomVector();
+      set<Element> elementSet(atomVector.begin(), atomVector.end());
+
+      for (auto ele : elementSet)
+      {
+        cout << ele.GetElementString() << endl;
+      }
+
       config.UpdateNeighborList(parameter.cutoffs_);
 
       pair<size_t, size_t> latticeIdJumpPair = {config.GetCentralAtomLatticeId(),
                                                 config.GetNeighborLatticeIdVectorOfLattice(config.GetCentralAtomLatticeId(), 1)[0]};
-      
+
       // 1 to 4 are Nb, Mo, Ta and W.
-      map<Element,size_t> elementMap;
+      map<Element, size_t> elementMap;
       size_t idx = 1;
       for (const auto element : parameter.element_vector_)
       {
         elementMap[Element(element)] = idx;
         idx++;
       }
-      
+
       GenerateNEBStructure(parameter.config_filename_,
                            config,
-                           latticeIdJumpPair, 
+                           latticeIdJumpPair,
                            elementMap);
     }
     else if (parameter.method == "GenerateAlloySupercell")
@@ -173,7 +184,7 @@ namespace api
       Config::WriteConfig(parameter.config_filename_ + ".cfg", config);
 
       // 1 to 4 are Nb, Mo, Ta and W.
-      map<Element,size_t> elementMap;
+      map<Element, size_t> elementMap;
       size_t idx = 1;
       for (const auto element : parameter.element_vector_)
       {
@@ -266,26 +277,26 @@ namespace api
 
       config.UpdateNeighborList(parameter.cutoffs_);
 
-      pair<Element, Element> b2ElementPair = {Element(parameter.b2_element_pair_.first), 
-                                       Element(parameter.b2_element_pair_.second)};
-      
+      pair<Element, Element> b2ElementPair = {Element(parameter.b2_element_pair_.first),
+                                              Element(parameter.b2_element_pair_.second)};
+
       GenerateStructureWithB2(config, parameter.max_num_B2_center_, b2ElementPair);
 
       pair<size_t, size_t> latticeIdJumpPair = {config.GetCentralAtomLatticeId(),
                                                 config.GetNeighborLatticeIdVectorOfLattice(config.GetCentralAtomLatticeId(), 1)[0]};
-      
+
       // 1 to 4 are Nb, Mo, Ta and W.
-      map<Element,size_t> elementMap;
+      map<Element, size_t> elementMap;
       size_t idx = 1;
       for (const auto element : parameter.element_vector_)
       {
         elementMap[Element(element)] = idx;
         idx++;
       }
-      
+
       GenerateNEBStructure(parameter.config_filename_,
                            config,
-                           latticeIdJumpPair, 
+                           latticeIdJumpPair,
                            elementMap);
     }
 

@@ -1034,10 +1034,22 @@ Config Config::GenerateAlloySupercell(
     unsigned seed)
 {
 
+  string baseElement;
+
+  for (int i = 0; i < composition_vector.size(); i++)
+  {
+    if (composition_vector[i] != 0)
+    {
+      baseElement = element_vector[i];
+      break;
+    }
+      
+  }
+
   // First element in the element vector is the base element
   auto base_supercell = GeneratePristineSupercell(supercell_size,
                                                   lattice_param,
-                                                  element_vector[0],
+                                                  baseElement,
                                                   structure_type);
 
   auto atom_vector = base_supercell.GetAtomVector();

@@ -38,13 +38,13 @@ ConfigEncoding::ConfigEncoding(
                                            {}))
 
 {
-  std::cout << "Cluster Types and Corresponding LatticeClusterCount:\n";
-  for (const auto &clusterType : initializedClusterHashSet_)
-  {
-    std::cout << clusterType << " : "
-              << latticeClusterCountHashMap_.at(clusterType.lattice_cluster_type_)
-              << "\n";
-  }
+  // std::cout << "Cluster Types and Corresponding LatticeClusterCount:\n";
+  // for (const auto &clusterType : initializedClusterHashSet_)
+  // {
+  //   std::cout << clusterType << " : "
+  //             << latticeClusterCountHashMap_.at(clusterType.lattice_cluster_type_)
+  //             << "\n";
+  // }
 }
 
 VectorXd ConfigEncoding::GetEncodeVector(const Config &config)
